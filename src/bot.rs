@@ -1,4 +1,5 @@
 use std::error::Error;
+use std::future::Future;
 use serenity::{async_trait};
 use serenity::client::{Context, EventHandler};
 use serenity::futures::StreamExt;
@@ -10,6 +11,7 @@ use serenity::model::gateway::Ready;
 use serenity::model::prelude::interaction::application_command::ApplicationCommandInteraction;
 use serenity::prelude::GatewayIntents;
 use crate::global_slash_command::GlobalSlashCommandDetails;
+use crate::TOKIO_RUNTIME;
 
 struct CommandsDetails {
     commands: Vec<GlobalSlashCommandDetails>
@@ -30,8 +32,8 @@ impl EventHandler for CommandsDetails {
                     .description(&new_command.description);
 
                 for option in new_command.options.iter(){
-                    command_builder.create_option(|option_uilder|{
-                        option_uilder.name(&option.name)
+                    command_builder.create_option(|option_builder|{
+                        option_builder.name(&option.name)
                             .description(&option.description)
                             .kind(option.kind)
                             .required(option.required)
@@ -128,12 +130,11 @@ impl EventHandler for CommandsDetails {
 pub async fn start(bot_token: String, intents: GatewayIntents, commands: Vec<GlobalSlashCommandDetails>) -> Result<(),Box<dyn Error>> {
 
     // let cmd = *commands.iter().clone().collect::<Vec<_>>();
-    let mut client =serenity::client::Client::builder(bot_token, intents)
-
+    let mut client_builder =serenity::client::Client::builder(bot_token, intents)
         .event_handler(CommandsDetails{
             commands: commands.to_owned()
-        })
-        .await?;
+        });
+    let mut client = client_builder.await?;
     client.start().await?;
     Ok(())
 }
