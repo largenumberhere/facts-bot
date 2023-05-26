@@ -1,7 +1,7 @@
 use std::error::Error;
-use serenity::{async_trait, client};
+use serenity::{async_trait};
 use serenity::client::{Context, EventHandler};
-use serenity::Error::Client;
+use serenity::futures::StreamExt;
 use serenity::http::Http;
 use serenity::model::application::command::Command;
 use serenity::model::application::interaction::Interaction;
@@ -9,24 +9,25 @@ use serenity::model::application::interaction::InteractionResponseType::ChannelM
 use serenity::model::gateway::Ready;
 use serenity::model::prelude::interaction::application_command::ApplicationCommandInteraction;
 use serenity::prelude::GatewayIntents;
-use crate::global_slash_command;
-use crate::global_slash_command::GlobalSlashCommand;
+use crate::global_slash_command::{GetCommandDetails, GlobalSlashCommand};
 
-struct CommandHandler{
-    commands: Vec<global_slash_command::GlobalSlashCommand>
+struct CommandsDetails<'a> {
+    commands: Vec<&'a dyn GlobalSlashCommand>
 }
 
 #[async_trait]
-impl EventHandler for CommandHandler{
+impl EventHandler for CommandsDetails<'_> {
     async fn ready(&self, context: Context, bot_data: Ready) {
         println!("Connected as '{}'",bot_data.user.name);
 
         let mut new_command_results = Vec::new();
         let mut failed_commands = 0;
-        for new_command in self.commands.iter().cloned(){
+
+
+        for new_command in ((&self.commands as CommandsDetails).commands).iter(){
             let result = Command::create_global_application_command(&context.http, |command_builder|{
-                command_builder.name(new_command.name)
-                    .description(new_command.description);
+                command_builder.name(new_command.get_command_details().name)
+                    .description(new_command.get_command_details().description);
 
                 for option in new_command.options{
                     command_builder.create_option(|option_uilder|{
@@ -109,7 +110,7 @@ impl EventHandler for CommandHandler{
                 }
             };
 
-            let command_processing_result = (slash_command.request_handler)(&command, &context, &interaction);
+            let command_processing_result = (slash_command)(&command, &context, &interaction);
             match command_processing_result{
                 Ok(v)=>{},
                 Err(e)=>{
@@ -124,16 +125,21 @@ impl EventHandler for CommandHandler{
     }
 }
 
-pub async fn start(bot_token: String, intents: GatewayIntents, commands: Vec<GlobalSlashCommand>) -> Result<(),Box<dyn Error>> {
+pub async fn start<'a>(bot_token: String, intents: GatewayIntents, commands: Vec<&'a dyn GlobalSlashCommand>) -> Result<(),Box<dyn Error>> {
+
+    // let cmd = *commands.iter().clone().collect::<Vec<_>>();
     let mut client =serenity::client::Client::builder(bot_token, intents)
-        .event_handler(CommandHandler{commands})
+
+        .event_handler(CommandsDetails{
+            commands: commands.to_owned()
+        })
         .await?;
     client.start().await?;
     Ok(())
 }
 
 pub async fn get_token() -> String{
-    let file = std::fs::read_to_string("./discord.file").expect("./discord.file should contain a bot token");
+    std::fs::read_to_string("./discord.file").expect("./discord.file should contain a bot token")
 }
 
 #[async_trait]
