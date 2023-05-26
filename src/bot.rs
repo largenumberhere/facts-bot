@@ -9,14 +9,14 @@ use serenity::model::application::interaction::InteractionResponseType::ChannelM
 use serenity::model::gateway::Ready;
 use serenity::model::prelude::interaction::application_command::ApplicationCommandInteraction;
 use serenity::prelude::GatewayIntents;
-use crate::global_slash_command::{GetCommandDetails, GlobalSlashCommand};
+use crate::global_slash_command::GlobalSlashCommandDetails;
 
-struct CommandsDetails<'a> {
-    commands: Vec<&'a dyn GlobalSlashCommand>
+struct CommandsDetails {
+    commands: Vec<GlobalSlashCommandDetails>
 }
 
 #[async_trait]
-impl EventHandler for CommandsDetails<'_> {
+impl EventHandler for CommandsDetails {
     async fn ready(&self, context: Context, bot_data: Ready) {
         println!("Connected as '{}'",bot_data.user.name);
 
@@ -24,15 +24,15 @@ impl EventHandler for CommandsDetails<'_> {
         let mut failed_commands = 0;
 
 
-        for new_command in ((&self.commands as CommandsDetails).commands).iter(){
+        for new_command in self.commands.iter(){
             let result = Command::create_global_application_command(&context.http, |command_builder|{
-                command_builder.name(new_command.get_command_details().name)
-                    .description(new_command.get_command_details().description);
+                command_builder.name(&new_command.name)
+                    .description(&new_command.description);
 
-                for option in new_command.options{
+                for option in new_command.options.iter(){
                     command_builder.create_option(|option_uilder|{
-                        option_uilder.name(option.name)
-                            .description(option.description)
+                        option_uilder.name(&option.name)
+                            .description(&option.description)
                             .kind(option.kind)
                             .required(option.required)
                     });
@@ -94,7 +94,7 @@ impl EventHandler for CommandsDetails<'_> {
     }
 
 
-    async fn interaction_create(&self, context: Context, interaction: Interaction) {
+    async fn interaction_create(&self ,context: Context, interaction: Interaction) {
         if let Interaction::ApplicationCommand(ref command) = interaction {
             let name = command.user.name.clone();
             let discriminator = command.user.discriminator;
@@ -110,7 +110,7 @@ impl EventHandler for CommandsDetails<'_> {
                 }
             };
 
-            let command_processing_result = (slash_command)(&command, &context, &interaction);
+            let command_processing_result = (slash_command.handler)(command, &context, &interaction);
             match command_processing_result{
                 Ok(v)=>{},
                 Err(e)=>{
@@ -125,7 +125,7 @@ impl EventHandler for CommandsDetails<'_> {
     }
 }
 
-pub async fn start<'a>(bot_token: String, intents: GatewayIntents, commands: Vec<&'a dyn GlobalSlashCommand>) -> Result<(),Box<dyn Error>> {
+pub async fn start(bot_token: String, intents: GatewayIntents, commands: Vec<GlobalSlashCommandDetails>) -> Result<(),Box<dyn Error>> {
 
     // let cmd = *commands.iter().clone().collect::<Vec<_>>();
     let mut client =serenity::client::Client::builder(bot_token, intents)
@@ -144,12 +144,12 @@ pub async fn get_token() -> String{
 
 #[async_trait]
 pub trait QuickReply{
-    async fn quick_reply(&self, text: String, http: impl AsRef<Http>+ std::marker::Send+ std::marker::Sync);
+    async fn quick_reply(&self, text: String, http: &Http);
 }
 
 #[async_trait]
-impl QuickReply for ApplicationCommandInteraction{
-    async fn quick_reply(&self, text: String, http: impl AsRef<Http> + std::marker::Send + std::marker::Sync) {
+impl QuickReply for &ApplicationCommandInteraction{
+    async fn quick_reply(&self, text: String, http: &Http) {
         let result = self.create_interaction_response(http,|r|{
             r.kind(ChannelMessageWithSource)
                 .interaction_response_data(|c|c.content(text))

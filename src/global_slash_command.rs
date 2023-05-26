@@ -10,18 +10,28 @@ pub struct GlobalSlashCommandDetails
     pub name: String,
     pub description: String,
     pub options: Vec<CommandOption>,
+    pub handler: fn(&ApplicationCommandInteraction, &Context, &Interaction) -> Result<(),String>
 }
 
-#[async_trait]
-pub trait CommandHandler: Send + Sync{
-    async fn handle_request(&self, command_interaction: &ApplicationCommandInteraction, context: & Context, interaction: &Interaction) -> Result<(),String>;
-}
+
+
+// #[async_trait]
+// pub trait CommandHandler: Send + Sync{
+//     async fn handle_request(&self, command_interaction: &ApplicationCommandInteraction, context: & Context, interaction: &Interaction) -> Result<(),String>;
+// }
 
 pub trait GetCommandDetails {
-    fn get_command_details(&self) -> GlobalSlashCommandDetails where Self: Sized;
+    fn get_command_details() -> GlobalSlashCommandDetails;
+}
+pub trait GetCommandFunc {
+    fn handle_request(command_interaction: &ApplicationCommandInteraction, context: & Context, interaction: &Interaction) -> Result<(),String>;
 }
 
 
-#[async_trait]
-pub trait GlobalSlashCommand : GetCommandDetails + CommandHandler + Sync + Send {}
+
+
+//
+//
+// #[async_trait]
+// pub trait GlobalSlashCommand : GetCommandDetails + CommandHandler + Sync + Send {}
 
