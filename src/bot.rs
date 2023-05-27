@@ -10,14 +10,14 @@ use serenity::model::application::interaction::InteractionResponseType::ChannelM
 use serenity::model::gateway::Ready;
 use serenity::model::prelude::interaction::application_command::ApplicationCommandInteraction;
 use serenity::prelude::GatewayIntents;
-use crate::global_slash_command::GlobalSlashCommandDetails;
+use crate::global_slash_command::{CommandError, CommandSuccess, GlobalSlashCommandDetails};
 
-struct CommandsDetails<TAsyncResult : Future<Output = Result<(),String>>> {
-    commands: Vec<GlobalSlashCommandDetails<TAsyncResult>>
+struct CommandsDetails {
+    commands: Vec<GlobalSlashCommandDetails>
 }
 
 #[async_trait]
-impl<T: Future<Output = Result<(),String>> + std::marker::Send> EventHandler for CommandsDetails<T> {
+impl EventHandler for CommandsDetails {
     async fn ready(&self, context: Context, bot_data: Ready) {
         println!("Connected as '{}'",bot_data.user.name);
 
@@ -113,20 +113,38 @@ impl<T: Future<Output = Result<(),String>> + std::marker::Send> EventHandler for
 
             let command_processing_result = (slash_command.handler)(command, &context, &interaction).await;
             match command_processing_result{
-                Ok(v)=>{},
-                Err(e)=>{
-                    eprintln!("Failed to process command!'{e}'\n    Command_name{}\n    Command:{:?}\n  Intreraction:{:#?}  \nuser:{}:{}    \n user_id:{}", command.data.name, command, interaction, command.user.name,command.user.discriminator,command.user.id);
-                    command.quick_reply(format!(":( sorry, your request failed because: {}",e),&context.http).await;
+                Ok(v) =>{
+                    match v {
+                        CommandSuccess::Success=>{},
+                        CommandSuccess::SuccessWithReply(e)=>{
+                            command.quick_reply(e,&context.http).await;
+                        }
+
+                    }
                 }
+
+                Err(e)=>{
+                    match e {
+                        CommandError::InvalidUserInputError(e) =>{
+                            command.quick_reply(format!(":( Sorry we couldn't parse your data because: {}",e),&context.http).await;
+                        },
+                        CommandError::InternalError(e) =>{
+                            eprintln!("Failed to process command!'{e}'\n    Command_name{}\n    Command:{:?}\n  Intreraction:{:#?}  \nuser:{}:{}    \n user_id:{}", command.data.name, command, interaction, command.user.name,command.user.discriminator,command.user.id);
+                            command.quick_reply(format!(":( sorry, your request failed because: {}",e),&context.http).await;
+                        }
+                    }
+                }
+
+
             }
-
-
         }
 
     }
+
 }
 
-pub async fn start<T: Future<Output = Result<(),String>> + 'static + std::marker::Send>(bot_token: String, intents: GatewayIntents, commands: Vec<GlobalSlashCommandDetails<T>>) -> Result<(),Box<dyn Error>> {
+
+pub async fn start(bot_token: String, intents: GatewayIntents, commands: Vec<GlobalSlashCommandDetails>) -> Result<(),Box<dyn Error>> {
 
     // let cmd = *commands.iter().clone().collect::<Vec<_>>();
     let mut client =serenity::client::Client::builder(bot_token, intents)
@@ -145,6 +163,7 @@ pub async fn get_token() -> String{
 pub trait QuickReply{
     async fn quick_reply(&self, text: String, http: &Http);
 }
+
 
 #[async_trait]
 impl QuickReply for &ApplicationCommandInteraction{
