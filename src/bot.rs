@@ -8,6 +8,7 @@ use serenity::http::Http;
 use serenity::model::application::command::Command;
 use serenity::model::application::interaction::Interaction;
 use serenity::model::application::interaction::InteractionResponseType::ChannelMessageWithSource;
+use serenity::model::channel::MessageType::ContextMenuCommand;
 use serenity::model::gateway::Ready;
 use serenity::model::prelude::interaction::application_command::ApplicationCommandInteraction;
 use serenity::prelude::GatewayIntents;
@@ -93,6 +94,11 @@ impl EventHandler for CommandsDetails {
                 Ok(v) => println!("Deleted command with id: '{}', name: '{}',", unused_command.id, unused_command.name)
             }
         }
+
+
+
+
+
     }
 
 

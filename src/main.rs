@@ -13,17 +13,24 @@ mod bot;
 // }
 #[tokio::main]
 async fn main(){
-    let commands = vec![
-        commands::cat_facts::CatFactsCommand::get_command_details(),
-        commands::useless_facts::UselessFactsCommand::get_command_details(),
-        commands::number_of_the_day::NumberOfTheDay::get_command_details()
-    ];
 
     let token = bot::get_token().await;
     let intents = GatewayIntents::empty();
 
-    bot::start(token, intents, commands).await.unwrap();
+    bot::start(token, intents, COMMANDS_LIST.clone()).await.unwrap();
 }
+
+static COMMANDS_LIST: once_cell::sync::Lazy<Vec<GlobalSlashCommandDetails>> = once_cell::sync::Lazy::new(||{
+    let commands = vec![
+        commands::cat_facts::CatFactsCommand::get_command_details(),
+        commands::useless_facts::UselessFactsCommand::get_command_details(),
+        commands::number_of_the_day::NumberOfTheDay::get_command_details(),
+        commands::help::Help::get_command_details()
+    ];
+
+    commands
+});
+
 
 // static HTTP_CLIENT: once_cell::sync::Lazy<hyper::Client<hyper::client::HttpConnector>>
 // = once_cell::sync::Lazy::new(||{
