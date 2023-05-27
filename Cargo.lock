@@ -188,6 +188,7 @@ version = "0.1.0"
 dependencies = [
  "futures",
  "hyper",
+ "hyper-tls",
  "once_cell",
  "rand",
  "reqwest",

@@ -1,5 +1,6 @@
 use std::error::Error;
 use std::future::Future;
+use hyper::body::HttpBody;
 use serenity::{async_trait};
 use serenity::client::{Context, EventHandler};
 use serenity::futures::StreamExt;
@@ -183,3 +184,38 @@ impl QuickReply for &ApplicationCommandInteraction{
         }
     }
 }
+
+pub struct HttpClient{}
+
+impl HttpClient{
+    pub async fn http_get_json(uri: hyper::Uri) -> Result<String, Box<dyn Error>>{
+        let client = hyper::client::Client::new();
+        let mut connection = client.get(uri).await?;
+        let mut buffer = Vec::new();
+
+        while let Some(next) = connection.body_mut().data().await {
+            let chunk = next?;
+            buffer.extend_from_slice(chunk.as_ref());
+        }
+
+        Ok(String::from_utf8(buffer)?)
+    }
+
+
+    pub async fn https_get_json(uri: hyper::Uri) -> Result<String, Box<dyn Error>>{
+        let https = hyper_tls::HttpsConnector::new();
+        let client = hyper::client::Client::builder().build::<_, hyper::Body>(https);
+
+        let mut connection = client.get(uri).await?;
+        let mut buffer = Vec::new();
+
+        while let Some(next) = connection.body_mut().data().await {
+            let chunk = next?;
+            buffer.extend_from_slice(chunk.as_ref());
+        }
+
+        Ok(String::from_utf8(buffer)?)
+    }
+
+}
+

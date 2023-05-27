@@ -12,6 +12,8 @@ use crate::bot::QuickReply;
 use crate::global_slash_command::{CommandError, CommandSuccess, GetCommandDetails, GlobalSlashCommandDetails, ToCommandResult};
 use serde::{Deserialize, Serialize};
 use rand::Rng;
+use crate::bot;
+
 pub struct CatFactsCommand{}
 
 impl GetCommandDetails for CatFactsCommand {
@@ -32,27 +34,27 @@ async fn handler(command_interaction: &ApplicationCommandInteraction, context: &
     //command_interaction.quick_reply(cat_info.to_string(),&context.http).await;
     let client = hyper::client::Client::new();
 
-    let response_json = {
-        let url = "http://cat-fact.herokuapp.com/facts".parse().unwrap();
-        let mut response = client.get(url).await.to_command_result()?;
-
-        let mut buff = Vec::new();
-        while let Some(next) = response.body_mut().data().await {
-            let chunk = next.to_command_result()?;
-            //buff.append(&mut chunk.to_vec());
-            buff.extend_from_slice(chunk.as_ref());
-            // for byte in chunk{
-            //     buff.push(byte);
-            // }
-        }
-
-
-        String::from_utf8(buff).to_command_result()?
-    };
+    // let response_json = {
+    //     let url = "http://cat-fact.herokuapp.com/facts".parse().unwrap();
+    //     let mut response = client.get(url).await.to_command_result()?;
+    //
+    //     let mut buff = Vec::new();
+    //     while let Some(next) = response.body_mut().data().await {
+    //         let chunk = next.to_command_result()?;
+    //         //buff.append(&mut chunk.to_vec());
+    //         buff.extend_from_slice(chunk.as_ref());
+    //         // for byte in chunk{
+    //         //     buff.push(byte);
+    //         // }
+    //     }
+    //
+    //
+    //     String::from_utf8(buff).to_command_result()?
+    // };
 
 
     //let response: CatFactsResponse = serde_json::from_str(response_json.as_str()).to_command_result()?;
-
+    let response_json = bot::HttpClient::http_get_json("http://cat-fact.herokuapp.com/facts".parse().to_command_result()?).await.to_command_result()?;
     let facts_response_data: Vec<CatFactData>= serde_json::from_str(response_json.as_str()).to_command_result()?;
 
     let mut random = rand::thread_rng();

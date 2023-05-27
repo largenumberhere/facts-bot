@@ -14,7 +14,8 @@ mod bot;
 #[tokio::main]
 async fn main(){
     let commands = vec![
-        commands::cat_facts::CatFactsCommand::get_command_details()
+        commands::cat_facts::CatFactsCommand::get_command_details(),
+        commands::useless_facts::UselessFactsCommand::get_command_details()
     ];
 
     let token = bot::get_token().await;
