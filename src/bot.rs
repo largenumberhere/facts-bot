@@ -11,14 +11,13 @@ use serenity::model::gateway::Ready;
 use serenity::model::prelude::interaction::application_command::ApplicationCommandInteraction;
 use serenity::prelude::GatewayIntents;
 use crate::global_slash_command::GlobalSlashCommandDetails;
-use crate::TOKIO_RUNTIME;
 
-struct CommandsDetails {
-    commands: Vec<GlobalSlashCommandDetails>
+struct CommandsDetails<TAsyncResult : Future<Output = Result<(),String>>> {
+    commands: Vec<GlobalSlashCommandDetails<TAsyncResult>>
 }
 
 #[async_trait]
-impl EventHandler for CommandsDetails {
+impl<T: Future<Output = Result<(),String>> + std::marker::Send> EventHandler for CommandsDetails<T> {
     async fn ready(&self, context: Context, bot_data: Ready) {
         println!("Connected as '{}'",bot_data.user.name);
 
@@ -112,7 +111,7 @@ impl EventHandler for CommandsDetails {
                 }
             };
 
-            let command_processing_result = (slash_command.handler)(command, &context, &interaction);
+            let command_processing_result = (slash_command.handler)(command, &context, &interaction).await;
             match command_processing_result{
                 Ok(v)=>{},
                 Err(e)=>{
@@ -127,14 +126,13 @@ impl EventHandler for CommandsDetails {
     }
 }
 
-pub async fn start(bot_token: String, intents: GatewayIntents, commands: Vec<GlobalSlashCommandDetails>) -> Result<(),Box<dyn Error>> {
+pub async fn start<T: Future<Output = Result<(),String>> + 'static + std::marker::Send>(bot_token: String, intents: GatewayIntents, commands: Vec<GlobalSlashCommandDetails<T>>) -> Result<(),Box<dyn Error>> {
 
     // let cmd = *commands.iter().clone().collect::<Vec<_>>();
-    let mut client_builder =serenity::client::Client::builder(bot_token, intents)
+    let mut client =serenity::client::Client::builder(bot_token, intents)
         .event_handler(CommandsDetails{
-            commands: commands.to_owned()
-        });
-    let mut client = client_builder.await?;
+            commands
+        }).await?;
     client.start().await?;
     Ok(())
 }
