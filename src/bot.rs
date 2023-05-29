@@ -1,6 +1,7 @@
 use std::error::Error;
 use std::future::Future;
 use hyper::body::HttpBody;
+use hyper::{Body, Method, Request};
 use serenity::{async_trait};
 use serenity::client::{Context, EventHandler};
 use serenity::futures::StreamExt;
@@ -161,7 +162,7 @@ pub async fn get_token() -> String{
 }
 
 pub async fn get_token_from(fileName: String) -> String{
-    std::fs::read_to_string(fileName.clone()).expect(&*format!("could not find {}", &fileName))
+    std::fs::read_to_string(fileName.clone()).expect(&*format!("Could not find the file {}. An api key was expected to be in there", &fileName))
 }
 
 #[async_trait]
@@ -219,6 +220,34 @@ impl HttpClient{
         }
 
         Ok(String::from_utf8(buffer)?)
+    }
+
+    pub async fn https_get_json_with_headers(uri: hyper::Uri, headers: Vec<(&'static str, &str)>) -> Result<String, Box<dyn Error>>{
+        let https = hyper_tls::HttpsConnector::new();
+        let client = hyper::client::Client::builder().build::<_, hyper::Body>(https);
+
+        let mut req = Request::builder()
+            .method(Method::GET)
+            .uri(uri);
+        // let mut headers_ =  req.headers_mut().unwrap();
+        let mut headers_mut = req.headers_mut().ok_or("failed to grab headers".to_string())?;
+
+        for (key, value) in headers{
+            headers_mut.append(key,value.parse()?);
+        }
+
+        let req = req.body(Body::from(""))?;
+
+        let mut response = client.request(req).await?;
+
+        let mut buffer = Vec::new();
+
+        while let Some(next) = response.body_mut().data().await {
+            let chunk = next?;
+            buffer.extend_from_slice(chunk.as_ref());
+        }
+        let json = String::from_utf8(buffer)?;
+        Ok(json)
     }
 
 
