@@ -28,6 +28,7 @@ pub struct GlobalSlashCommandDetails
 pub trait GetCommandDetails {
     fn get_command_details() -> GlobalSlashCommandDetails;
 }
+
 // pub trait GetCommandFunc {
 //     fn handle_request(command_interaction: &ApplicationCommandInteraction, context: & Context, interaction: &Interaction) -> Result<(),String>;
 // }

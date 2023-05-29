@@ -21,11 +21,15 @@ async fn main(){
 }
 
 static COMMANDS_LIST: once_cell::sync::Lazy<Vec<GlobalSlashCommandDetails>> = once_cell::sync::Lazy::new(||{
+
+
+
     let commands = vec![
         commands::cat_facts::CatFactsCommand::get_command_details(),
         commands::useless_facts::UselessFactsCommand::get_command_details(),
         commands::number_of_the_day::NumberOfTheDay::get_command_details(),
-        commands::help::Help::get_command_details()
+        commands::help::Help::get_command_details(),
+        commands::api_ninjas_facts::ApiNinjasFacts::get_command_details()
     ];
 
     commands

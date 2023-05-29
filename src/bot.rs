@@ -94,13 +94,7 @@ impl EventHandler for CommandsDetails {
                 Ok(v) => println!("Deleted command with id: '{}', name: '{}',", unused_command.id, unused_command.name)
             }
         }
-
-
-
-
-
     }
-
 
     async fn interaction_create(&self ,context: Context, interaction: Interaction) {
         if let Interaction::ApplicationCommand(ref command) = interaction {
@@ -166,6 +160,10 @@ pub async fn get_token() -> String{
     std::fs::read_to_string("./discord.file").expect("./discord.file should contain a bot token")
 }
 
+pub async fn get_token_from(fileName: String) -> String{
+    std::fs::read_to_string(fileName.clone()).expect(&*format!("could not find {}", &fileName))
+}
+
 #[async_trait]
 pub trait QuickReply{
     async fn quick_reply(&self, text: String, http: &Http);
@@ -222,6 +220,8 @@ impl HttpClient{
 
         Ok(String::from_utf8(buffer)?)
     }
+
+
 
 }
 
