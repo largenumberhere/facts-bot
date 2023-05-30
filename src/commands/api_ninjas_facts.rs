@@ -31,9 +31,9 @@ async fn handler(command_interaction: &ApplicationCommandInteraction, context: &
     let json = bot::HttpClient::https_get_json_with_headers(uri, vec![("X-Api-Key",ninja_facts_key.as_str())]).await.to_command_result()?;
 
     let facts: Vec<FactReply> = serde_json::from_str(json.as_str()).to_command_result()?;
-    let fact = facts.get(0).ok_or_else(||"Failure to get fact 0".to_string()).to_command_result()?;
+    let factReply = facts.get(0).ok_or_else(||"Failure to get fact 0".to_string()).to_command_result()?;
 
-    Ok(CommandSuccess::SuccessWithReply(fact.fact.to_string()))
+    Ok(CommandSuccess::SuccessWithReply(factReply.fact.to_string()))
 }
 
 

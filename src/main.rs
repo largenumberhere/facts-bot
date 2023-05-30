@@ -6,6 +6,7 @@ mod commands;
 mod global_slash_command;
 mod bot;
 
+
 // fn main() {
 //     TOKIO_RUNTIME.block_on(
 //         main_async()
