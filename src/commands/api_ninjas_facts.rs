@@ -28,7 +28,7 @@ async fn handler(command_interaction: &ApplicationCommandInteraction, context: &
     let uri: Uri = "https://api.api-ninjas.com/v1/facts?limit=1".parse().to_command_result()?;
     let ninja_facts_key = bot::get_token_from("api-ninjas-com-key.file".to_string()).await;
 
-    let json = bot::HttpClient::https_get_json_with_headers(uri, vec![("X-Api-Key",ninja_facts_key.as_str())]).await.to_command_result()?;
+    let json = bot::HttpClient::https_get_json_with_headers(uri, vec![("X-Api-Key",ninja_facts_key.to_command_result()?.as_str())]).await.to_command_result()?;
 
     let facts: Vec<FactReply> = serde_json::from_str(json.as_str()).to_command_result()?;
     let factReply = facts.get(0).ok_or_else(||"Failure to get fact 0".to_string()).to_command_result()?;

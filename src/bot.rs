@@ -1,5 +1,6 @@
 use std::error::Error;
 use std::future::Future;
+use futures::future::ok;
 use hyper::body::HttpBody;
 use hyper::{Body, Method, Request};
 use serenity::{async_trait};
@@ -157,12 +158,16 @@ pub async fn start(bot_token: String, intents: GatewayIntents, commands: Vec<Glo
     Ok(())
 }
 
-pub async fn get_token() -> String{
-    std::fs::read_to_string("./discord.file").expect("./discord.file should contain a bot token")
+pub async fn get_token() -> Result<String, std::io::Error>{
+    let file_contents = tokio::fs::read_to_string("./discord.file").await?;
+    Ok(file_contents)
 }
 
-pub async fn get_token_from(fileName: String) -> String{
-    std::fs::read_to_string(fileName.clone()).expect(&*format!("Could not find the file {}. An api key was expected to be in there", &fileName))
+pub async fn get_token_from(fileName: String) -> Result<String, std::io::Error> {
+    //Is reading the file at runtime more secure? Idk?? I'll come back to this later
+    let string = tokio::fs::read_to_string(&fileName).await?;
+    Ok(string)
+    //std::fs::read_to_string(fileName.clone()).expect(&*format!("Could not find the file {}. An api key was expected to be in there", &fileName))
 }
 
 #[async_trait]
