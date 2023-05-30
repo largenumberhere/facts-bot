@@ -1,3 +1,4 @@
+use std::any::Any;
 use std::error::Error;
 use std::future::Future;
 use futures::future::ok;
@@ -7,7 +8,7 @@ use serenity::{async_trait};
 use serenity::client::{Context, EventHandler};
 use serenity::futures::StreamExt;
 use serenity::http::Http;
-use serenity::model::application::command::Command;
+use serenity::model::application::command::{Command, CommandType};
 use serenity::model::application::interaction::Interaction;
 use serenity::model::application::interaction::InteractionResponseType::ChannelMessageWithSource;
 use serenity::model::channel::MessageType::ContextMenuCommand;
@@ -23,13 +24,42 @@ struct CommandsDetails {
 #[async_trait]
 impl EventHandler for CommandsDetails {
     async fn ready(&self, context: Context, bot_data: Ready) {
-        println!("Connected as '{}'",bot_data.user.name);
 
+
+
+        // //try to add a context menu command!
+        //
+        // let command = Command::create_global_application_command(&context.http, |c| {
+        //     c.kind(serenity::model::prelude::command::CommandType::User);
+        //     c.name("hello world!");
+        //     c.description("say hello world!")
+        // });
+        // let command = command.await;
+        // if let Err(e) = command{
+        //     panic!("{:#?}",e);
+        // }
+        // ////////////////////////////////////////
+
+
+
+
+
+        println!("Connected as '{}'",bot_data.user.name);
         let mut new_command_results = Vec::new();
         let mut failed_commands = 0;
 
 
+        let current_commands = Command::get_global_application_commands(&context.http).await.unwrap();
+        let current_commands = current_commands.iter();
+
+
         for new_command in self.commands.iter(){
+            if current_commands.clone().find(|c| c.name == new_command.name).is_some() {
+                println!("command with name '{}' already found. Not registering it", new_command.name);
+                continue;
+            }
+
+
             let result = Command::create_global_application_command(&context.http, |command_builder|{
                 command_builder.name(&new_command.name)
                     .description(&new_command.description);
@@ -59,33 +89,33 @@ impl EventHandler for CommandsDetails {
         }
 
 
+        //let all_commands = Command::get_global_application_commands(&context.http).await;
+        // let all_commands = match all_commands {
+        //     Ok(v) => {
+        //         Some(v)
+        //     }
+        //     Err(e) => {
+        //         eprintln!("Failed to fetch commands! Ignoring {:?}",e);
+        //         None
+        //     }
+        // };
+
+
         //cleanup any old commands
-        let all_commands = Command::get_global_application_commands(&context.http).await;
-        let all_commands = match all_commands {
-            Ok(v) => {
-                Some(v)
-            }
-            Err(e) => {
-                eprintln!("Failed to fetch commands! Ignoring {:?}",e);
-                None
-            }
-        };
-
-
 
         let old_commands = {
             let mut old_commands = Vec  ::new();
 
-            if let Some(ref all_commands) = all_commands {
-                for command in all_commands {
-                    match new_command_results.iter().find(|ac| ac.id == command.id) {
+            // if let Some(ref all_commands) = current_commands {
+                for command in current_commands.clone() {
+                    match current_commands.clone().find(|ac| ac.id == command.id) {
                         Some(_v) => {},
                         None => {
                             old_commands.push(command)
                         }
                     }
                 }
-            }
+            //}
 
             old_commands
         };
@@ -96,52 +126,60 @@ impl EventHandler for CommandsDetails {
                 Ok(v) => println!("Deleted command with id: '{}', name: '{}',", unused_command.id, unused_command.name)
             }
         }
+
+
+
     }
 
     async fn interaction_create(&self ,context: Context, interaction: Interaction) {
-        if let Interaction::ApplicationCommand(ref command) = interaction {
-            let name = command.user.name.clone();
-            let discriminator = command.user.discriminator;
-            println!("interaction received from {name}:{discriminator}");
+        match interaction {
+            Interaction::ApplicationCommand(ref c) =>{
+                handle_command_interaction(self,&context,&interaction, &c).await;
+            }
+            _=>{}
+        }
 
-            let command_name_requested = command.data.name.as_str();
-            let bot_command = self.commands.iter().find(|c| c.name.as_str() == command_name_requested );
-            let slash_command = match bot_command {
-                Some(v) => v,
-                None =>{
-                    command.quick_reply("not a valid command!".to_string(), &context.http).await;
-                    return;
+    }
+
+}
+
+async fn handle_command_interaction(command_deals: &CommandsDetails, context: &Context, interaction: &Interaction, command: &ApplicationCommandInteraction){
+    let name = command.user.name.clone();
+    let discriminator = command.user.discriminator;
+    println!("interaction received from {name}:{discriminator}");
+
+    let command_name_requested = command.data.name.as_str();
+    let bot_command = command_deals.commands.iter().find(|c| c.name.as_str() == command_name_requested);
+    let slash_command = match bot_command {
+        Some(v) => v,
+        None => {
+            command.quick_reply("not a valid command!".to_string(), &context.http).await;
+            return;
+        }
+    };
+
+    let command_processing_result = (slash_command.handler)(command, &context, &interaction).await;
+    match command_processing_result {
+        Ok(v) => {
+            match v {
+                CommandSuccess::Success => {},
+                CommandSuccess::SuccessWithReply(e) => {
+                    command.quick_reply(e, &context.http).await;
                 }
-            };
-
-            let command_processing_result = (slash_command.handler)(command, &context, &interaction).await;
-            match command_processing_result{
-                Ok(v) =>{
-                    match v {
-                        CommandSuccess::Success=>{},
-                        CommandSuccess::SuccessWithReply(e)=>{
-                            command.quick_reply(e,&context.http).await;
-                        }
-
-                    }
-                }
-
-                Err(e)=>{
-                    match e {
-                        CommandError::InvalidUserInputError(e) =>{
-                            command.quick_reply(format!(":( Sorry we couldn't parse your data because: {}",e),&context.http).await;
-                        },
-                        CommandError::InternalError(e) =>{
-                            eprintln!("Failed to process command!'{e}'\n    Command_name{}\n    Command:{:?}\n  Intreraction:{:#?}  \nuser:{}:{}    \n user_id:{}", command.data.name, command, interaction, command.user.name,command.user.discriminator,command.user.id);
-                            command.quick_reply(format!(":( sorry, your request failed because: {}",e),&context.http).await;
-                        }
-                    }
-                }
-
-
             }
         }
 
+        Err(e) => {
+            match e {
+                CommandError::InvalidUserInputError(e) => {
+                    command.quick_reply(format!(":( Sorry we couldn't parse your data because: {}", e), &context.http).await;
+                },
+                CommandError::InternalError(e) => {
+                    eprintln!("Failed to process command!'{e}'\n    Command_name{}\n    Command:{:?}\n  Intreraction:{:#?}  \nuser:{}:{}    \n user_id:{}", command.data.name, command, interaction, command.user.name, command.user.discriminator, command.user.id);
+                    command.quick_reply(format!(":( sorry, your request failed because: {}", e), &context.http).await;
+                }
+            }
+        }
     }
 
 }
