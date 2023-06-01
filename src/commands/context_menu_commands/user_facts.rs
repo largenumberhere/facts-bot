@@ -1,11 +1,9 @@
-use std::fmt::format;
-use futures::{FutureExt, TryFutureExt};
+use futures::{FutureExt};
 use crate::context_menu_command::{ContextMenuCommandDetails, GetContextMenuCommandDetails};
 use serenity::client::Context;
 use serenity::model::application::interaction::application_command::{ApplicationCommandInteraction, ResolvedTarget};
-use serenity::model::application::interaction::{Interaction, InteractionResponseType};
-use serenity::model::prelude::UserPublicFlags;
-use crate::bot::{QuickReply, QuickReplyEphemeral};
+use serenity::model::application::interaction::{Interaction};
+use crate::bot::{QuickReplyEphemeral};
 use crate::command_result::{CommandError, CommandSuccess, ToCommandResult};
 
 pub struct UserFactsContextCommand {}
@@ -21,10 +19,10 @@ impl GetContextMenuCommandDetails for UserFactsContextCommand {
     }
 }
 
-async fn handler(command_interaction: &ApplicationCommandInteraction, context: &Context, interaction: &Interaction) -> Result<CommandSuccess, CommandError> {
+async fn handler(command_interaction: &ApplicationCommandInteraction, context: &Context, _interaction: &Interaction) -> Result<CommandSuccess, CommandError> {
     let target_info = command_interaction.data.target().ok_or("Failed to fetch user info for the specified target!".to_string()).to_command_result()?;
 
-    let (target_user, partial_user_info) = match target_info {
+    let (target_user, _partial_user_info) = match target_info {
         ResolvedTarget::User(user, b) => {
             (user, b)
         }
@@ -36,7 +34,7 @@ async fn handler(command_interaction: &ApplicationCommandInteraction, context: &
         }
     };
 
-    let partial_user_info = partial_user_info.ok_or("Failed to fetch information about the targeted user".to_string()).to_command_result()?;
+    //let partial_user_info = _partial_user_info.ok_or("Failed to fetch information about the targeted user".to_string()).to_command_result()?;
     let user = context.http.get_user(target_user.id.0).await.to_command_result()?;
 
     let mut reply = String::new();

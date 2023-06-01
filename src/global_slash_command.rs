@@ -1,7 +1,4 @@
-use std::fmt::{Debug, Error};
-use std::future::Future;
 use futures::future::BoxFuture;
-use serenity::async_trait;
 use serenity::client::Context;
 use serenity::model::application::interaction::Interaction;
 use serenity::model::prelude::command::CommandOption;

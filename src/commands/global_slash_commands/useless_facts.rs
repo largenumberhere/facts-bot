@@ -21,7 +21,7 @@ impl GetSlashCommandDetails for UselessFactsCommand{
     }
 }
 
-async fn handler(command_interaction: &ApplicationCommandInteraction, context: &Context, interaction: &Interaction) -> Result<CommandSuccess, CommandError>{
+async fn handler(_command_interaction: &ApplicationCommandInteraction, _context: &Context, _interaction: &Interaction) -> Result<CommandSuccess, CommandError>{
     let uri = "https://uselessfacts.jsph.pl/api/v2/facts/random".parse().to_command_result()?;
     let json = bot::HttpClient::https_get_json(uri).await.to_command_result()?;
     let result:UselessFactsResult =  serde_json::from_str(json.as_str()).to_command_result()?;

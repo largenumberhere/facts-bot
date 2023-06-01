@@ -1,5 +1,3 @@
-use std::fmt::{Debug, Error};
-use std::future::Future;
 use serenity::prelude::GatewayIntents;
 use crate::context_menu_command::{ContextMenuCommandDetails, GetContextMenuCommandDetails};
 use crate::global_slash_command::{GetSlashCommandDetails, GlobalSlashCommandDetails};

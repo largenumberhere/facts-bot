@@ -22,7 +22,7 @@ impl GetSlashCommandDetails for NumberOfTheDay{
     }
 }
 
-async fn handler(command_interaction: &ApplicationCommandInteraction, context: &Context, interaction: &Interaction) -> Result<CommandSuccess, CommandError> {
+async fn handler(_command_interaction: &ApplicationCommandInteraction, _context: &Context, _interaction: &Interaction) -> Result<CommandSuccess, CommandError> {
     let uri = "https://api.math.tools/numbers/nod".parse().to_command_result()?;
     let json = bot::HttpClient::https_get_json(uri).await.to_command_result()?;
     let number_of_the_day_response: Root =  serde_json::from_str(json.as_str()).to_command_result()?;

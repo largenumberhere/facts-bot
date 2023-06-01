@@ -1,17 +1,12 @@
-use std::any::Any;
 use std::error::Error;
-use std::future::Future;
-use futures::future::ok;
 use hyper::body::HttpBody;
 use hyper::{Body, Method, Request};
 use serenity::async_trait;
 use serenity::client::{Context, EventHandler};
-use serenity::futures::StreamExt;
 use serenity::http::{CacheHttp, Http};
 use serenity::model::application::command::{Command, CommandType};
 use serenity::model::application::interaction::Interaction;
 use serenity::model::application::interaction::InteractionResponseType::ChannelMessageWithSource;
-use serenity::model::channel::MessageType::ContextMenuCommand;
 use serenity::model::gateway::Ready;
 use serenity::model::prelude::interaction::application_command::ApplicationCommandInteraction;
 use serenity::prelude::GatewayIntents;
@@ -73,7 +68,7 @@ impl EventHandler for CommandsDetails {
         }
 
 
-        ///register slash commands
+        //register slash commands
         for new_command in self.slash_commands.iter(){
             if current_commands.clone().find(|c| c.name == new_command.name).is_some() {
                 match new_command.force_command_update {
@@ -133,10 +128,10 @@ impl EventHandler for CommandsDetails {
             old_commands
         };
 
-        for unused_command in old_slash_commands {
-            match Command::delete_global_application_command(&context.http, unused_command.id).await {
-                Err(e) => eprintln!("Failed to delete command with id: '{}', name: '{}'", unused_command.id, unused_command.name),
-                Ok(v) => println!("Deleted command with id: '{}', name: '{}',", unused_command.id, unused_command.name)
+        for unused_slash_command in old_slash_commands {
+            match Command::delete_global_application_command(&context.http, unused_slash_command.id).await {
+                Err(e) => eprintln!("Failed to delete command with id: '{}', name: '{}'\n error:{:#?}", unused_slash_command.id, unused_slash_command.name, e),
+                Ok(_) => println!("Deleted command with id: '{}', name: '{}',", unused_slash_command.id, unused_slash_command.name)
             }
         }
 
@@ -273,9 +268,9 @@ pub async fn get_token() -> Result<String, std::io::Error>{
     Ok(file_contents)
 }
 
-pub async fn get_token_from(fileName: String) -> Result<String, std::io::Error> {
+pub async fn get_token_from(file_name: String) -> Result<String, std::io::Error> {
     //Is reading the file at runtime more secure? Idk?? I'll come back to this later
-    let string = tokio::fs::read_to_string(&fileName).await?;
+    let string = tokio::fs::read_to_string(&file_name).await?;
     Ok(string)
     //std::fs::read_to_string(fileName.clone()).expect(&*format!("Could not find the file {}. An api key was expected to be in there", &fileName))
 }
@@ -371,7 +366,7 @@ impl HttpClient{
             .method(Method::GET)
             .uri(uri);
         // let mut headers_ =  req.headers_mut().unwrap();
-        let mut headers_mut = req.headers_mut().ok_or("failed to grab headers".to_string())?;
+        let headers_mut: &mut hyper::HeaderMap = req.headers_mut().ok_or("failed to grab headers".to_string())?;
 
         for (key, value) in headers{
             headers_mut.append(key,value.parse()?);

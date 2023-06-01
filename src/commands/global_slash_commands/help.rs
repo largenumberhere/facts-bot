@@ -1,16 +1,13 @@
 use std::iter::zip;
-use futures::{FutureExt, StreamExt};
-use itertools::{chain, izip};
+use futures::{FutureExt};
 use crate::global_slash_command::{GetSlashCommandDetails, GlobalSlashCommandDetails};
 use serenity::client::Context;
 use serenity::model::application::interaction::application_command::ApplicationCommandInteraction;
 use serenity::model::application::interaction::Interaction;
-use serde::{Deserialize, Serialize};
-use crate::{bot, CONTEXT_COMMANDS_LIST, SLASH_COMMANDS_LIST};
-use crate::command_result::{CommandError, CommandSuccess, ToCommandResult};
+use crate::{CONTEXT_COMMANDS_LIST, SLASH_COMMANDS_LIST};
+use crate::command_result::{CommandError, CommandSuccess};
 
 pub struct Help{}
-
 impl GetSlashCommandDetails for Help{
     fn get_slash_command_details() -> GlobalSlashCommandDetails {
         GlobalSlashCommandDetails{
@@ -22,7 +19,7 @@ impl GetSlashCommandDetails for Help{
         }
     }
 }
-async fn handler(command_interaction: &ApplicationCommandInteraction, context: &Context, interaction: &Interaction) -> Result<CommandSuccess, CommandError> {
+async fn handler(_command_interaction: &ApplicationCommandInteraction, _context: &Context, _interaction: &Interaction) -> Result<CommandSuccess, CommandError> {
     let mut response = String::new();
 
     let slash_names = SLASH_COMMANDS_LIST.iter().map(|f| &f.name);

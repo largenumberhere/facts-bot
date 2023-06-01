@@ -1,14 +1,7 @@
-use std::future::Future;
-use std::ops::Deref;
-use futures::{FutureExt, TryFutureExt};
-use hyper::body::HttpBody;
-use hyper::Uri;
-use serde_json::Value;
-use serenity::async_trait;
+use futures::{FutureExt};
 use serenity::client::Context;
 use serenity::model::application::interaction::application_command::ApplicationCommandInteraction;
 use serenity::model::application::interaction::Interaction;
-use crate::bot::QuickReply;
 use crate::global_slash_command::{GetSlashCommandDetails, GlobalSlashCommandDetails};
 use serde::{Deserialize, Serialize};
 use rand::Rng;
@@ -30,11 +23,11 @@ impl GetSlashCommandDetails for CatFactsCommand {
     }
 }
 
-async fn handler(command_interaction: &ApplicationCommandInteraction, context: &Context, interaction: &Interaction) -> Result<CommandSuccess, CommandError>{
-    let cat_info = "cats!";
+async fn handler(_command_interaction: &ApplicationCommandInteraction, _context: &Context, _interaction: &Interaction) -> Result<CommandSuccess, CommandError>{
+
 
     //command_interaction.quick_reply(cat_info.to_string(),&context.http).await;
-    let client = hyper::client::Client::new();
+
 
     // let response_json = {
     //     let url = "http://cat-fact.herokuapp.com/facts".parse().unwrap();
