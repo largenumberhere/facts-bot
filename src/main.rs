@@ -1,11 +1,15 @@
 use std::fmt::{Debug, Error};
 use std::future::Future;
 use serenity::prelude::GatewayIntents;
-use crate::global_slash_command::{GetCommandDetails, GlobalSlashCommandDetails};
+use crate::context_menu_command::{ContextMenuCommandDetails, GetContextMenuCommandDetails};
+use crate::global_slash_command::{GetSlashCommandDetails, GlobalSlashCommandDetails};
+use crate::commands::context_menu_commands;
+use crate::commands::global_slash_commands;
 
 mod commands;
 mod global_slash_command;
 mod bot;
+mod context_menu_command;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn  std::error::Error>>  {
@@ -13,17 +17,25 @@ async fn main() -> Result<(), Box<dyn  std::error::Error>>  {
     let token = bot::get_token().await?;
     let intents = GatewayIntents::empty();
 
-    bot::start(token, intents, COMMANDS_LIST.clone()).await?;
+    bot::start(token, intents, SLASH_COMMANDS_LIST.clone(), CONTEXT_COMMANDS_LIST.clone()).await?;
     Ok(())
 }
 
-static COMMANDS_LIST: once_cell::sync::Lazy<Vec<GlobalSlashCommandDetails>> = once_cell::sync::Lazy::new(||{
+static SLASH_COMMANDS_LIST: once_cell::sync::Lazy<Vec<GlobalSlashCommandDetails>> = once_cell::sync::Lazy::new(||{
     let commands = vec![
-        commands::cat_facts::CatFactsCommand::get_command_details(),
-        commands::useless_facts::UselessFactsCommand::get_command_details(),
-        commands::number_of_the_day::NumberOfTheDay::get_command_details(),
-        commands::help::Help::get_command_details(),
-        commands::api_ninjas_facts::ApiNinjasFacts::get_command_details()
+        global_slash_commands::cat_facts::CatFactsCommand::get_slash_command_details(),
+        global_slash_commands::useless_facts::UselessFactsCommand::get_slash_command_details(),
+        global_slash_commands::number_of_the_day::NumberOfTheDay::get_slash_command_details(),
+        global_slash_commands::help::Help::get_slash_command_details(),
+        global_slash_commands::api_ninjas_facts::ApiNinjasFacts::get_slash_command_details()
+    ];
+
+    commands
+});
+
+static CONTEXT_COMMANDS_LIST: once_cell::sync::Lazy<Vec<ContextMenuCommandDetails>> = once_cell::sync::Lazy::new(||{
+    let commands = vec![
+        context_menu_commands::hello_world::HelloWorldContextCommand::get_context_menu_command_details()
     ];
 
     commands

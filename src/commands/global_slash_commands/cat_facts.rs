@@ -9,15 +9,15 @@ use serenity::client::Context;
 use serenity::model::application::interaction::application_command::ApplicationCommandInteraction;
 use serenity::model::application::interaction::Interaction;
 use crate::bot::QuickReply;
-use crate::global_slash_command::{CommandError, CommandSuccess, GetCommandDetails, GlobalSlashCommandDetails, ToCommandResult};
+use crate::global_slash_command::{CommandError, CommandSuccess, GetSlashCommandDetails, GlobalSlashCommandDetails, ToCommandResult};
 use serde::{Deserialize, Serialize};
 use rand::Rng;
 use crate::bot;
 
 pub struct CatFactsCommand{}
 
-impl GetCommandDetails for CatFactsCommand {
-    fn get_command_details() -> GlobalSlashCommandDetails
+impl GetSlashCommandDetails for CatFactsCommand {
+    fn get_slash_command_details() -> GlobalSlashCommandDetails
     {
         return GlobalSlashCommandDetails {
             name: "daily_cat_facts".to_string(),

@@ -7,7 +7,7 @@ use hyper::{Body, Method, Request};
 use serenity::{async_trait};
 use serenity::client::{Context, EventHandler};
 use serenity::futures::StreamExt;
-use serenity::http::Http;
+use serenity::http::{CacheHttp, Http};
 use serenity::model::application::command::{Command, CommandType};
 use serenity::model::application::interaction::Interaction;
 use serenity::model::application::interaction::InteractionResponseType::ChannelMessageWithSource;
@@ -16,23 +16,58 @@ use serenity::model::gateway::Ready;
 use serenity::model::prelude::interaction::application_command::ApplicationCommandInteraction;
 use serenity::prelude::GatewayIntents;
 use crate::global_slash_command::{CommandError, CommandSuccess, GlobalSlashCommandDetails};
+use std::borrow::Borrow;
+use crate::context_menu_command::ContextMenuCommandDetails;
 
 struct CommandsDetails {
-    commands: Vec<GlobalSlashCommandDetails>
+    slash_commands: Vec<GlobalSlashCommandDetails>,
+    context_menu_commands: Vec<ContextMenuCommandDetails>
 }
 
 #[async_trait]
 impl EventHandler for CommandsDetails {
     async fn ready(&self, context: Context, bot_data: Ready) {
 
+        //startup message
+        println!("Connected as '{}'",bot_data.user.name);
+        let mut new_command_results = Vec::new();
+        let mut failed_commands = 0;
+
+        //get information for registering commands
+        let current_commands = Command::get_global_application_commands(&context.http).await.unwrap();
+        let current_commands = current_commands.iter();
+
+
+        //register context menu commands
+        for new_command in self.context_menu_commands.iter(){
+            if current_commands.clone().find(|c| c.name == new_command.name).is_some(){
+                println!("Command with name '{}' already found. Not registering it as context menu command", new_command.name);
+                continue;
+            }
+
+            let result = Command::create_global_application_command(&context.http, |command_builder|{
+               command_builder.name(&new_command.name)
+                   .kind(CommandType::User)
+            }).await;
+
+            match result {
+                Ok(c) =>{
+                    println!("context menu command created! '{}'",c.name);
+                    new_command_results.push(c);
+                },
+                Err(ref e)=> {
+                    failed_commands+=1;
+                    eprintln!("failed to create context menu command!\ncommand_result:{:#?}\nerror:{}", result, e);
+                }
+            }
+        }
 
 
         // //try to add a context menu command!
         //
         // let command = Command::create_global_application_command(&context.http, |c| {
         //     c.kind(serenity::model::prelude::command::CommandType::User);
-        //     c.name("hello world!");
-        //     c.description("say hello world!")
+        //     c.name("hello_world")
         // });
         // let command = command.await;
         // if let Err(e) = command{
@@ -40,22 +75,10 @@ impl EventHandler for CommandsDetails {
         // }
         // ////////////////////////////////////////
 
-
-
-
-
-        println!("Connected as '{}'",bot_data.user.name);
-        let mut new_command_results = Vec::new();
-        let mut failed_commands = 0;
-
-
-        let current_commands = Command::get_global_application_commands(&context.http).await.unwrap();
-        let current_commands = current_commands.iter();
-
-
-        for new_command in self.commands.iter(){
+        ///register slash commands
+        for new_command in self.slash_commands.iter(){
             if current_commands.clone().find(|c| c.name == new_command.name).is_some() {
-                println!("command with name '{}' already found. Not registering it", new_command.name);
+                println!("command with name '{}' already found. Not registering it as global slash-command", new_command.name);
                 continue;
             }
 
@@ -78,16 +101,15 @@ impl EventHandler for CommandsDetails {
 
             match result {
                 Ok(c) =>{
-                    println!("command created! '{}'",c.name);
+                    println!("slash command created! '{}'",c.name);
                     new_command_results.push(c);
                 },
                 Err(ref e)=> {
                     failed_commands+=1;
-                    eprintln!("failed to create command!\ncommand_result:{:#?}\nerror:{}. {} command(s) failed to register", result, e,failed_commands);
+                    eprintln!("failed to create slash command!\ncommand_result:{:#?}\nerror:{}", result, e);
                 }
             }
         }
-
 
         //let all_commands = Command::get_global_application_commands(&context.http).await;
         // let all_commands = match all_commands {
@@ -101,9 +123,8 @@ impl EventHandler for CommandsDetails {
         // };
 
 
-        //cleanup any old commands
-
-        let old_commands = {
+        //cleanup any old slash commands
+        let old_slash_commands = {
             let mut old_commands = Vec  ::new();
 
             // if let Some(ref all_commands) = current_commands {
@@ -120,7 +141,7 @@ impl EventHandler for CommandsDetails {
             old_commands
         };
 
-        for unused_command in old_commands {
+        for unused_command in old_slash_commands {
             match Command::delete_global_application_command(&context.http, unused_command.id).await {
                 Err(e) => eprintln!("Failed to delete command with id: '{}', name: '{}'", unused_command.id, unused_command.name),
                 Ok(v) => println!("Deleted command with id: '{}', name: '{}',", unused_command.id, unused_command.name)
@@ -128,28 +149,91 @@ impl EventHandler for CommandsDetails {
         }
 
 
-
+        //cleanup after all command regisering
+        if failed_commands > 0{
+            eprintln!("{} commands failed to register!",failed_commands)
+        }
     }
+
+
+
 
     async fn interaction_create(&self ,context: Context, interaction: Interaction) {
         match interaction {
             Interaction::ApplicationCommand(ref c) =>{
-                handle_command_interaction(self,&context,&interaction, &c).await;
+                println!("command of type {:#?}, received from {}:{}",c.data.kind, &c.user.name, c.user.discriminator);
+
+                match  c.data.kind.borrow() {
+                    CommandType::ChatInput => {//Slash command
+                        handle_slash_command_interaction(self, &context, &interaction, &c).await;
+                    }
+                    CommandType::User => {//Context menu command, found when clicking on user and Apps
+                        handle_context_menu_command_interaction(self ,&context,&interaction,&c).await;
+                    }
+                    CommandType::Message => {}  //
+                    CommandType::Unknown => {}
+                    _ => {
+                        eprintln!("This should never happen! Fuck knows what this interaction is: {:#?}\n", interaction);
+                    }
+                }
+
+            },
+            _=>{
+                println!("unhandled interaction received: {:#?}\n", interaction);
             }
-            _=>{}
+        }
+    }
+}
+
+async fn handle_context_menu_command_interaction(command_details: &CommandsDetails ,context: &Context, interaction: &Interaction, command: &ApplicationCommandInteraction){
+    let command_name_requested = command.data.name.as_str();
+    let command_found = command_details.context_menu_commands.iter().find(|c| c.name.as_str() == command_name_requested);
+    let command_found = match command_found {
+        None=>{
+            command.quick_reply("not a valid command!".to_string(), &context.http()).await;
+            return;
+        },
+        Some(v)=>{
+            v
+        }
+    };
+
+    let command_processing_result = (command_found.handler)(command, &context, &interaction).await;
+    match command_processing_result {
+        Ok(v) =>{
+            match v {
+                CommandSuccess::Success => {},
+                CommandSuccess::SuccessWithReply(e) => {
+                    command.quick_reply(e, &context.http).await;
+                }
+            }
+        }
+
+        Err(e) =>{
+            match e {
+                CommandError::InvalidUserInputError(e) => {
+                    command.quick_reply(format!(":( Sorry we couldn't parse your data because: {}", e), &context.http).await;
+                },
+                CommandError::InternalError(e) => {
+                    eprintln!("Failed to process command!'{e}'\n    Command_name{}\n    Command:{:?}\n  Interaction:{:#?}  \nuser:{}:{}    \n user_id:{}", command.data.name, command, interaction, command.user.name, command.user.discriminator, command.user.id);
+                    command.quick_reply(format!(":( sorry, your request failed because: {}", e), &context.http).await;
+                }
+            }
         }
 
     }
 
 }
 
-async fn handle_command_interaction(command_deals: &CommandsDetails, context: &Context, interaction: &Interaction, command: &ApplicationCommandInteraction){
-    let name = command.user.name.clone();
-    let discriminator = command.user.discriminator;
-    println!("interaction received from {name}:{discriminator}");
+
+
+async fn handle_slash_command_interaction(command_details: &CommandsDetails, context: &Context, interaction: &Interaction, command: &ApplicationCommandInteraction){
+    // let name = command.user.name.clone();
+    // let discriminator = command.user.discriminator;
+    // println!("interaction received from {name}:{discriminator}");
 
     let command_name_requested = command.data.name.as_str();
-    let bot_command = command_deals.commands.iter().find(|c| c.name.as_str() == command_name_requested);
+    let bot_command = command_details.slash_commands.iter().find(|c| c.name.as_str() == command_name_requested);
     let slash_command = match bot_command {
         Some(v) => v,
         None => {
@@ -185,12 +269,13 @@ async fn handle_command_interaction(command_deals: &CommandsDetails, context: &C
 }
 
 
-pub async fn start(bot_token: String, intents: GatewayIntents, commands: Vec<GlobalSlashCommandDetails>) -> Result<(),Box<dyn Error>> {
+pub async fn start(bot_token: String, intents: GatewayIntents, slash_commands: Vec<GlobalSlashCommandDetails>, context_menu_commands: Vec<ContextMenuCommandDetails>) -> Result<(),Box<dyn Error>> {
 
     // let cmd = *commands.iter().clone().collect::<Vec<_>>();
     let mut client =serenity::client::Client::builder(bot_token, intents)
         .event_handler(CommandsDetails{
-            commands
+            slash_commands,
+            context_menu_commands
         }).await?;
     client.start().await?;
     Ok(())
@@ -207,6 +292,37 @@ pub async fn get_token_from(fileName: String) -> Result<String, std::io::Error> 
     Ok(string)
     //std::fs::read_to_string(fileName.clone()).expect(&*format!("Could not find the file {}. An api key was expected to be in there", &fileName))
 }
+
+#[async_trait]
+pub trait QuickReplyEphemeral {
+    async fn quick_reply_ephemeral(&self, text: String, http: &Http);
+}
+
+#[async_trait]
+impl QuickReplyEphemeral for &ApplicationCommandInteraction {
+    async fn quick_reply_ephemeral(&self, text: String, http: &Http) {
+        let result = self.create_interaction_response(http,|r|{
+            r.kind(ChannelMessageWithSource)
+                .interaction_response_data(|c| {
+                    c.content(text);
+                    c.ephemeral(true)
+                })
+        }).await;
+
+        match result {
+            Ok(_) =>{
+                println!("Responded to {}:{}",self.user.name, self.user.discriminator);
+            },
+            Err(e) => {
+                eprintln!("Failed to respond to {}:{}, because {:#?}",self.user.name, self.user.discriminator, e);
+            }
+        }
+
+
+
+    }
+}
+
 
 #[async_trait]
 pub trait QuickReply{
@@ -227,10 +343,11 @@ impl QuickReply for &ApplicationCommandInteraction{
                 println!("Responded to {}:{}",self.user.name, self.user.discriminator);
             },
             Err(e) => {
-                eprintln!("Faied to respond to {}:{}, because {:#?}",self.user.name, self.user.discriminator, e);
+                eprintln!("Failed to respond to {}:{}, because {:#?}",self.user.name, self.user.discriminator, e);
             }
         }
     }
+
 }
 
 pub struct HttpClient{}

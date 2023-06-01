@@ -25,8 +25,8 @@ pub struct GlobalSlashCommandDetails
 //     async fn handle_request(&self, command_interaction: &ApplicationCommandInteraction, context: & Context, interaction: &Interaction) -> Result<(),String>;
 // }
 
-pub trait GetCommandDetails {
-    fn get_command_details() -> GlobalSlashCommandDetails;
+pub trait GetSlashCommandDetails {
+    fn get_slash_command_details() -> GlobalSlashCommandDetails;
 }
 
 // pub trait GetCommandFunc {
@@ -39,7 +39,6 @@ pub enum CommandError {
 }
 
 pub enum  CommandSuccess{
-
     Success,
     SuccessWithReply(String)
 }

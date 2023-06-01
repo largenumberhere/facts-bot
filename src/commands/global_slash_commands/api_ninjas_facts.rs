@@ -8,13 +8,13 @@ use serenity::client::Context;
 use serenity::model::application::interaction::application_command::ApplicationCommandInteraction;
 use serenity::model::application::interaction::Interaction;
 use crate::bot;
-use crate::global_slash_command::{CommandError, CommandSuccess, GetCommandDetails, GlobalSlashCommandDetails, ToCommandResult};
+use crate::global_slash_command::{CommandError, CommandSuccess, GetSlashCommandDetails, GlobalSlashCommandDetails, ToCommandResult};
 use std::string::String;
 
 pub struct ApiNinjasFacts{}
 
-impl GetCommandDetails for ApiNinjasFacts{
-    fn get_command_details() -> GlobalSlashCommandDetails {
+impl GetSlashCommandDetails for ApiNinjasFacts{
+    fn get_slash_command_details() -> GlobalSlashCommandDetails {
         GlobalSlashCommandDetails{
             name: "facts".to_string(),
             description: "Get a random fact from https://api-ninjas.com/api/facts".to_string(),

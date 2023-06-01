@@ -1,5 +1,5 @@
 use futures::FutureExt;
-use crate::global_slash_command::{CommandError, CommandSuccess, GetCommandDetails, GlobalSlashCommandDetails, ToCommandResult};
+use crate::global_slash_command::{CommandError, CommandSuccess, GetSlashCommandDetails, GlobalSlashCommandDetails, ToCommandResult};
 use serenity::client::Context;
 use serenity::model::application::interaction::application_command::ApplicationCommandInteraction;
 use serenity::model::application::interaction::Interaction;
@@ -9,8 +9,8 @@ use crate::bot;
 
 pub struct NumberOfTheDay{}
 
-impl GetCommandDetails for NumberOfTheDay{
-    fn get_command_details() -> GlobalSlashCommandDetails {
+impl GetSlashCommandDetails for NumberOfTheDay{
+    fn get_slash_command_details() -> GlobalSlashCommandDetails {
         GlobalSlashCommandDetails{
             name: "number_of_the_day".to_string(),
             options: vec![],

@@ -1,5 +1,2 @@
-pub mod cat_facts;
-pub mod useless_facts;
-pub mod number_of_the_day;
-pub mod help;
-pub mod api_ninjas_facts;
+pub mod context_menu_commands;
+pub mod global_slash_commands;
