@@ -24,7 +24,8 @@ impl GetSlashCommandDetails for CatFactsCommand {
             name: "daily_cat_facts".to_string(),
             description: "Get one of 5 cat facts updated daily at from https://alexwohlbruck.github.io/cat-facts/".to_string(),
             options: Vec::new().into(),
-            handler: |command_interaction, context, interaction| handler(command_interaction, context, interaction).boxed()
+            handler: |command_interaction, context, interaction| handler(command_interaction, context, interaction).boxed(),
+            force_command_update: None,
         }
     }
 }

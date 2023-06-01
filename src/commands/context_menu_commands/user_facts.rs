@@ -16,7 +16,7 @@ impl GetContextMenuCommandDetails for UserFactsContextCommand {
             name: "user_facts".to_string(),
             help_description: "shows a list of facts about a user".to_string(),
             handler: |command_interaction, context, interaction| handler(command_interaction, context, interaction).boxed(),
-
+            force_command_update: None
         }
     }
 }

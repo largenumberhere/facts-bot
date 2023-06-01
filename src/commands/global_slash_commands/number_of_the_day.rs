@@ -16,7 +16,8 @@ impl GetSlashCommandDetails for NumberOfTheDay{
             name: "number_of_the_day".to_string(),
             options: vec![],
             description: "get information about the number of the day according to https://api.math.tools/".to_string(),
-            handler: |command_interaction, context, interaction| handler(command_interaction, context, interaction).boxed()
+            handler: |command_interaction, context, interaction| handler(command_interaction, context, interaction).boxed(),
+            force_command_update: None,
         }
     }
 }

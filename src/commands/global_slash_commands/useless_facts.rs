@@ -15,7 +15,8 @@ impl GetSlashCommandDetails for UselessFactsCommand{
             name: "useless_fact".to_string(),
             description: "Get a 'useless' fun fact from https://uselessfacts.jsph.pl/".to_string(),
             options: vec![],
-            handler: |command_interaction, context, interaction| handler(command_interaction, context, interaction).boxed()
+            handler: |command_interaction, context, interaction| handler(command_interaction, context, interaction).boxed(),
+            force_command_update: None,
         }
     }
 }

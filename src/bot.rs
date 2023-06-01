@@ -42,8 +42,17 @@ impl EventHandler for CommandsDetails {
         //register context menu commands
         for new_command in self.context_menu_commands.iter(){
             if current_commands.clone().find(|c| c.name == new_command.name).is_some(){
-                println!("Command with name '{}' already found. Not registering it as context menu command", new_command.name);
-                continue;
+                match new_command.force_command_update {
+                    Some(_) =>{
+                        println!("Warning: command with name '{}' is being forced to re-upload", new_command.name)
+                    },
+                    None=>{
+                        println!("Command with name '{}' already found. Not registering it as context menu command", new_command.name);
+                        continue;
+                    }
+
+
+                }
             }
 
             let result = Command::create_global_application_command(&context.http, |command_builder|{
@@ -67,8 +76,15 @@ impl EventHandler for CommandsDetails {
         ///register slash commands
         for new_command in self.slash_commands.iter(){
             if current_commands.clone().find(|c| c.name == new_command.name).is_some() {
-                println!("command with name '{}' already found. Not registering it as global slash-command", new_command.name);
-                continue;
+                match new_command.force_command_update {
+                    Some(_) =>{
+                        println!("Warning: command with name '{}' is being forced to re-upload", new_command.name)
+                    },
+                    None=>{
+                        println!("command with name '{}' already found. Not registering it as global slash-command", new_command.name);
+                        continue;
+                    }
+                }
             }
 
             let result = Command::create_global_application_command(&context.http, |command_builder|{

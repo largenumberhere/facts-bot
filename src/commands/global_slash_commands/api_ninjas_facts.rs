@@ -20,7 +20,8 @@ impl GetSlashCommandDetails for ApiNinjasFacts{
             name: "facts".to_string(),
             description: "Get a random fact from https://api-ninjas.com/api/facts".to_string(),
             options: vec![],
-            handler: |command_interaction, context, interaction| handler(command_interaction, context, interaction).boxed()
+            handler: |command_interaction, context, interaction| handler(command_interaction, context, interaction).boxed(),
+            force_command_update: None,
         }
     }
 }

@@ -8,7 +8,8 @@ use crate::command_result::{CommandError, CommandSuccess};
 pub struct ContextMenuCommandDetails{
     pub name: String,
     pub help_description: String,
-    pub handler: for<'a> fn(&'a ApplicationCommandInteraction, &'a Context, &'a Interaction) -> BoxFuture<'a, Result<CommandSuccess,CommandError>>
+    pub handler: for<'a> fn(&'a ApplicationCommandInteraction, &'a Context, &'a Interaction) -> BoxFuture<'a, Result<CommandSuccess,CommandError>>,
+    pub force_command_update: Option<()>
 }
 
 pub trait GetContextMenuCommandDetails{

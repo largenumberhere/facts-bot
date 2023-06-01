@@ -14,7 +14,6 @@ mod command_result;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn  std::error::Error>>  {
-
     let token = bot::get_token().await?;
     let intents = GatewayIntents::empty();
 
@@ -28,7 +27,8 @@ static SLASH_COMMANDS_LIST: once_cell::sync::Lazy<Vec<GlobalSlashCommandDetails>
         global_slash_commands::useless_facts::UselessFactsCommand::get_slash_command_details(),
         global_slash_commands::number_of_the_day::NumberOfTheDay::get_slash_command_details(),
         global_slash_commands::help::Help::get_slash_command_details(),
-        global_slash_commands::api_ninjas_facts::ApiNinjasFacts::get_slash_command_details()
+        global_slash_commands::api_ninjas_facts::ApiNinjasFacts::get_slash_command_details(),
+        global_slash_commands::api_ninjas_trivia::ApiNinjasTrivia::get_slash_command_details()
     ];
 
     commands

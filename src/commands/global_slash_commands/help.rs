@@ -17,7 +17,8 @@ impl GetSlashCommandDetails for Help{
             name:"help".to_string(),
             description:"Shows all the available commands".to_string(),
             options: vec![],
-            handler: |command_interaction, context, interaction| handler(command_interaction, context, interaction).boxed()
+            handler: |command_interaction, context, interaction| handler(command_interaction, context, interaction).boxed(),
+            force_command_update: None,
         }
     }
 }
