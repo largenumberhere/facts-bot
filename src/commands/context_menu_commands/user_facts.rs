@@ -6,13 +6,11 @@ use serenity::model::application::interaction::application_command::{Application
 use serenity::model::application::interaction::{Interaction, InteractionResponseType};
 use serenity::model::prelude::UserPublicFlags;
 use crate::bot::{QuickReply, QuickReplyEphemeral};
-use crate::global_slash_command::{CommandError, CommandSuccess, ToCommandResult};
+use crate::command_result::{CommandError, CommandSuccess, ToCommandResult};
 
-pub struct HelloWorldContextCommand{
+pub struct UserFactsContextCommand {}
 
-}
-
-impl GetContextMenuCommandDetails for HelloWorldContextCommand{
+impl GetContextMenuCommandDetails for UserFactsContextCommand {
     fn get_context_menu_command_details() -> ContextMenuCommandDetails {
         ContextMenuCommandDetails{
             name: "user_facts".to_string(),

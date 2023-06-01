@@ -1,12 +1,13 @@
 use std::iter::zip;
 use futures::{FutureExt, StreamExt};
 use itertools::{chain, izip};
-use crate::global_slash_command::{CommandError, CommandSuccess, GetSlashCommandDetails, GlobalSlashCommandDetails, ToCommandResult};
+use crate::global_slash_command::{GetSlashCommandDetails, GlobalSlashCommandDetails};
 use serenity::client::Context;
 use serenity::model::application::interaction::application_command::ApplicationCommandInteraction;
 use serenity::model::application::interaction::Interaction;
 use serde::{Deserialize, Serialize};
 use crate::{bot, CONTEXT_COMMANDS_LIST, SLASH_COMMANDS_LIST};
+use crate::command_result::{CommandError, CommandSuccess, ToCommandResult};
 
 pub struct Help{}
 

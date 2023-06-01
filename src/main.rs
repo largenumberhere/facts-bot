@@ -10,6 +10,7 @@ mod commands;
 mod global_slash_command;
 mod bot;
 mod context_menu_command;
+mod command_result;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn  std::error::Error>>  {
@@ -35,7 +36,7 @@ static SLASH_COMMANDS_LIST: once_cell::sync::Lazy<Vec<GlobalSlashCommandDetails>
 
 static CONTEXT_COMMANDS_LIST: once_cell::sync::Lazy<Vec<ContextMenuCommandDetails>> = once_cell::sync::Lazy::new(||{
     let commands = vec![
-        context_menu_commands::hello_world::HelloWorldContextCommand::get_context_menu_command_details()
+        context_menu_commands::user_facts::UserFactsContextCommand::get_context_menu_command_details()
     ];
 
     commands

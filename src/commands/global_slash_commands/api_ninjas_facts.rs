@@ -3,13 +3,14 @@ use hyper::body::HttpBody;
 use hyper::{Body, HeaderMap, Method, Request, Uri};
 use hyper::http::HeaderValue;
 use reqwest::RequestBuilder;
-use serde::{Serialize,Deserialize};
+use serde::{Deserialize, Serialize};
 use serenity::client::Context;
 use serenity::model::application::interaction::application_command::ApplicationCommandInteraction;
 use serenity::model::application::interaction::Interaction;
 use crate::bot;
-use crate::global_slash_command::{CommandError, CommandSuccess, GetSlashCommandDetails, GlobalSlashCommandDetails, ToCommandResult};
+use crate::global_slash_command::{GetSlashCommandDetails, GlobalSlashCommandDetails};
 use std::string::String;
+use crate::command_result::{CommandError, CommandSuccess, ToCommandResult};
 
 pub struct ApiNinjasFacts{}
 

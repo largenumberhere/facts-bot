@@ -4,7 +4,7 @@ use std::future::Future;
 use futures::future::ok;
 use hyper::body::HttpBody;
 use hyper::{Body, Method, Request};
-use serenity::{async_trait};
+use serenity::async_trait;
 use serenity::client::{Context, EventHandler};
 use serenity::futures::StreamExt;
 use serenity::http::{CacheHttp, Http};
@@ -15,8 +15,9 @@ use serenity::model::channel::MessageType::ContextMenuCommand;
 use serenity::model::gateway::Ready;
 use serenity::model::prelude::interaction::application_command::ApplicationCommandInteraction;
 use serenity::prelude::GatewayIntents;
-use crate::global_slash_command::{CommandError, CommandSuccess, GlobalSlashCommandDetails};
+use crate::global_slash_command::GlobalSlashCommandDetails;
 use std::borrow::Borrow;
+use crate::command_result::{CommandError, CommandSuccess};
 use crate::context_menu_command::ContextMenuCommandDetails;
 
 struct CommandsDetails {
@@ -33,7 +34,7 @@ impl EventHandler for CommandsDetails {
         let mut new_command_results = Vec::new();
         let mut failed_commands = 0;
 
-        //get information for registering commands
+        //get current commands' info
         let current_commands = Command::get_global_application_commands(&context.http).await.unwrap();
         let current_commands = current_commands.iter();
 
@@ -63,25 +64,12 @@ impl EventHandler for CommandsDetails {
         }
 
 
-        // //try to add a context menu command!
-        //
-        // let command = Command::create_global_application_command(&context.http, |c| {
-        //     c.kind(serenity::model::prelude::command::CommandType::User);
-        //     c.name("hello_world")
-        // });
-        // let command = command.await;
-        // if let Err(e) = command{
-        //     panic!("{:#?}",e);
-        // }
-        // ////////////////////////////////////////
-
         ///register slash commands
         for new_command in self.slash_commands.iter(){
             if current_commands.clone().find(|c| c.name == new_command.name).is_some() {
                 println!("command with name '{}' already found. Not registering it as global slash-command", new_command.name);
                 continue;
             }
-
 
             let result = Command::create_global_application_command(&context.http, |command_builder|{
                 command_builder.name(&new_command.name)
@@ -111,18 +99,6 @@ impl EventHandler for CommandsDetails {
             }
         }
 
-        //let all_commands = Command::get_global_application_commands(&context.http).await;
-        // let all_commands = match all_commands {
-        //     Ok(v) => {
-        //         Some(v)
-        //     }
-        //     Err(e) => {
-        //         eprintln!("Failed to fetch commands! Ignoring {:?}",e);
-        //         None
-        //     }
-        // };
-
-
         //cleanup any old slash commands
         let old_slash_commands = {
             let mut old_commands = Vec  ::new();
@@ -149,7 +125,7 @@ impl EventHandler for CommandsDetails {
         }
 
 
-        //cleanup after all command regisering
+        //cleanup after all command registering
         if failed_commands > 0{
             eprintln!("{} commands failed to register!",failed_commands)
         }
@@ -228,10 +204,6 @@ async fn handle_context_menu_command_interaction(command_details: &CommandsDetai
 
 
 async fn handle_slash_command_interaction(command_details: &CommandsDetails, context: &Context, interaction: &Interaction, command: &ApplicationCommandInteraction){
-    // let name = command.user.name.clone();
-    // let discriminator = command.user.discriminator;
-    // println!("interaction received from {name}:{discriminator}");
-
     let command_name_requested = command.data.name.as_str();
     let bot_command = command_details.slash_commands.iter().find(|c| c.name.as_str() == command_name_requested);
     let slash_command = match bot_command {
@@ -270,7 +242,6 @@ async fn handle_slash_command_interaction(command_details: &CommandsDetails, con
 
 
 pub async fn start(bot_token: String, intents: GatewayIntents, slash_commands: Vec<GlobalSlashCommandDetails>, context_menu_commands: Vec<ContextMenuCommandDetails>) -> Result<(),Box<dyn Error>> {
-
     // let cmd = *commands.iter().clone().collect::<Vec<_>>();
     let mut client =serenity::client::Client::builder(bot_token, intents)
         .event_handler(CommandsDetails{
@@ -317,9 +288,6 @@ impl QuickReplyEphemeral for &ApplicationCommandInteraction {
                 eprintln!("Failed to respond to {}:{}, because {:#?}",self.user.name, self.user.discriminator, e);
             }
         }
-
-
-
     }
 }
 
@@ -328,7 +296,6 @@ impl QuickReplyEphemeral for &ApplicationCommandInteraction {
 pub trait QuickReply{
     async fn quick_reply(&self, text: String, http: &Http);
 }
-
 
 #[async_trait]
 impl QuickReply for &ApplicationCommandInteraction{
@@ -351,7 +318,6 @@ impl QuickReply for &ApplicationCommandInteraction{
 }
 
 pub struct HttpClient{}
-
 impl HttpClient{
     pub async fn http_get_json(uri: hyper::Uri) -> Result<String, Box<dyn Error>>{
         let client = hyper::client::Client::new();
@@ -365,7 +331,6 @@ impl HttpClient{
 
         Ok(String::from_utf8(buffer)?)
     }
-
 
     pub async fn https_get_json(uri: hyper::Uri) -> Result<String, Box<dyn Error>>{
         let https = hyper_tls::HttpsConnector::new();

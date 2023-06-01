@@ -1,10 +1,11 @@
 use futures::FutureExt;
-use crate::global_slash_command::{CommandError, CommandSuccess, GetSlashCommandDetails, GlobalSlashCommandDetails, ToCommandResult};
+use crate::global_slash_command::{GetSlashCommandDetails, GlobalSlashCommandDetails};
 use serenity::client::Context;
 use serenity::model::application::interaction::application_command::ApplicationCommandInteraction;
 use serenity::model::application::interaction::Interaction;
 use serde::{Deserialize, Serialize};
 use crate::bot;
+use crate::command_result::{CommandError, CommandSuccess, ToCommandResult};
 
 pub struct UselessFactsCommand{}
 

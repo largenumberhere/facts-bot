@@ -2,7 +2,7 @@ use futures::future::BoxFuture;
 use serenity::client::Context;
 use serenity::model::application::interaction::application_command::ApplicationCommandInteraction;
 use serenity::model::application::interaction::Interaction;
-use crate::global_slash_command::{CommandError, CommandSuccess};
+use crate::command_result::{CommandError, CommandSuccess};
 
 #[derive(Clone)]
 pub struct ContextMenuCommandDetails{
