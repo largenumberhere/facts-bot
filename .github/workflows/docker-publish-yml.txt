@@ -37,9 +37,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         
-      - name: cargo update
-        run: cargo update
-      
       - name: cargo build
         run: cargo build
       
