@@ -22,7 +22,7 @@ WORKDIR facts-bot
 RUN cargo clean
 
 #Build the project
-RUN cargo build
+RUN cargo build --release
 #RUN cargo build --release --target=aarch64-unknown-linux-gnu
 
 #Add secrets
