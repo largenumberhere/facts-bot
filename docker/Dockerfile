@@ -26,7 +26,7 @@ RUN cargo build
 #RUN cargo build --release --target=aarch64-unknown-linux-gnu
 
 #Add secrets
-ADD keys/* .
+ADD keys/* ./
 
 #Run on machiene startup
 CMD cargo run --release
