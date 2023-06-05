@@ -1,5 +1,5 @@
 use futures::FutureExt;
-use hyper::Uri;
+// use hyper::Uri;
 use serenity::client::Context;
 use serenity::model::application::interaction::application_command::ApplicationCommandInteraction;
 use serenity::model::application::interaction::Interaction;
@@ -25,7 +25,7 @@ impl GetSlashCommandDetails for ApiNinjasTrivia{
 }
 
 async fn handler(_command_interaction: &ApplicationCommandInteraction, _context: &Context, _interaction: &Interaction) -> Result<CommandSuccess, CommandError> {
-    let uri: Uri = "https://api.api-ninjas.com/v1/trivia?category=general".parse().to_command_result()?;
+    let uri: reqwest::Url = "https://api.api-ninjas.com/v1/trivia?category=general".parse().to_command_result()?;
     let ninja_facts_key = bot::get_token_from("api-ninjas-com-key.file".to_string()).await.to_command_result()?;
     let json = bot::HttpClient::https_get_json_with_headers(uri, vec![("X-Api-Key", ninja_facts_key.as_str())]).await.to_command_result()?;
 

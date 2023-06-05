@@ -377,7 +377,6 @@ dependencies = [
  "chrono",
  "criterion",
  "futures",
- "hyper",
  "hyper-tls",
  "itertools",
  "once_cell",

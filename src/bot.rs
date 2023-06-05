@@ -1,6 +1,4 @@
 use std::error::Error;
-use hyper::body::HttpBody;
-use hyper::{Body, HeaderMap, Method, Request};
 use serenity::async_trait;
 use serenity::client::{Context, EventHandler};
 use serenity::http::{CacheHttp, Http};
@@ -12,7 +10,7 @@ use serenity::model::prelude::interaction::application_command::ApplicationComma
 use serenity::prelude::GatewayIntents;
 use crate::global_slash_command::GlobalSlashCommandDetails;
 use std::borrow::Borrow;
-use hyper::http::HeaderValue;
+use reqwest::header::HeaderMap;
 use crate::command_result::{CommandError, CommandSuccess};
 use crate::context_menu_command::ContextMenuCommandDetails;
 
@@ -336,73 +334,99 @@ impl QuickReply for &ApplicationCommandInteraction{
 
 pub struct HttpClient{}
 impl HttpClient{
-    pub async fn http_get_json(uri: hyper::Uri) -> Result<String, Box<dyn Error>>{
-        let client = hyper::client::Client::new();
-        let mut connection = client.get(uri).await?;
-        let mut buffer = Vec::new();
-
-        while let Some(next) = connection.body_mut().data().await {
-            let chunk = next?;
-            buffer.extend_from_slice(chunk.as_ref());
-        }
-
-        Ok(String::from_utf8(buffer)?)
-    }
-
-    pub async fn https_get_json(uri: hyper::Uri) -> Result<String, Box<dyn Error>>{
-        let https = hyper_tls::HttpsConnector::new();
-        let client = hyper::client::Client::builder().build::<_, hyper::Body>(https);
-
-        let mut connection = client.get(uri).await?;
-        let mut buffer = Vec::new();
-
-        while let Some(next) = connection.body_mut().data().await {
-            let chunk = next?;
-            buffer.extend_from_slice(chunk.as_ref());
-        }
-
-        Ok(String::from_utf8(buffer)?)
-    }
-
-    pub async fn https_get_json_with_headers(uri: hyper::Uri, headers: Vec<(&'static str, &str)>) -> Result<String, Box<dyn Error>>{
-        let https = hyper_tls::HttpsConnector::new();
-        let client = hyper::client::Client::builder().build::<_, hyper::Body>(https);
-
-        let mut req = Request::builder()
-            .method(Method::GET)
-            .uri(uri);
-        // let mut headers_ =  req.headers_mut().unwrap();
-        // let headers_mut: &mut hyper::HeaderMap = req.headers_mut().ok_or("failed to grab headers".to_string())?;
+    pub async fn http_get_json(uri: reqwest::Url) -> Result<String, Box<dyn Error>>{
+        // let client = hyper::client::Client::new();
+        // let mut connection = client.get(uri).await?;
+        // let mut buffer = Vec::new();
         //
-        //
-        // for (key, value) in headers{
-        //     headers_mut.append(key,value.parse()?);
+        // while let Some(next) = connection.body_mut().data().await {
+        //     let chunk = next?;
+        //     buffer.extend_from_slice(chunk.as_ref());
         // }
+        //
+        // Ok(String::from_utf8(buffer)?)
+        let client = reqwest::Client::builder().build()?;
 
-        let mut h = HeaderMap::new();
-        for (key, value) in headers{
-            h.insert(key,HeaderValue::from_str(value).expect("failed to parse header value"));
-        }
-
-        let mut headers_mut = req.headers_mut().expect("failed to get headers");
-        headers_mut.drain();
-        for v in h.iter(){
-            headers_mut.insert(v.0, v.1.to_owned());
-        }
-
-
-        let req = req.body(Body::from(""))?;
-
-        let mut response = client.request(req).await?;
-
-        let mut buffer = Vec::new();
-
-        while let Some(next) = response.body_mut().data().await {
-            let chunk = next?;
-            buffer.extend_from_slice(chunk.as_ref());
-        }
-        let json = String::from_utf8(buffer)?;
+        let response =client.get(uri).send().await?;
+        let json = response.text().await?;
         Ok(json)
+    }
+
+    pub async fn https_get_json(uri: reqwest::Url) -> Result<String, Box<dyn Error>>{
+        let client = reqwest::Client::builder()
+            .https_only(true)
+            .build()?;
+
+        let response = client.get(uri).send().await?;
+        let json =response.text().await?;
+
+        Ok(json)
+
+
+        // let https = hyper_tls::HttpsConnector::new();
+        // let client = hyper::client::Client::builder().build::<_, hyper::Body>(https);
+        //
+        // let mut connection = client.get(uri).await?;
+        // let mut buffer = Vec::new();
+        //
+        // while let Some(next) = connection.body_mut().data().await {
+        //     let chunk = next?;
+        //     buffer.extend_from_slice(chunk.as_ref());
+        // }
+        //
+        // Ok(String::from_utf8(buffer)?)
+    }
+
+    pub async fn https_get_json_with_headers(uri: reqwest::Url, headers: Vec<(&'static str, &str)>) -> Result<String, Box<dyn Error>>{
+        let client = reqwest::Client::builder().build()?;
+
+        let mut header_map = HeaderMap::new();
+        for header in headers{
+            header_map.insert(header.0, header.1.parse()?);
+        }
+
+        let response = client.get(uri).headers(header_map).send().await?;
+        let json = response.text().await?;
+        Ok(json)
+
+        // let https = hyper_tls::HttpsConnector::new();
+        // let client = hyper::client::Client::builder().build::<_, hyper::Body>(https);
+        //
+        // let mut req = Request::builder()
+        //     .method(Method::GET)
+        //     .uri(uri);
+        // // let mut headers_ =  req.headers_mut().unwrap();
+        // // let headers_mut: &mut hyper::HeaderMap = req.headers_mut().ok_or("failed to grab headers".to_string())?;
+        // //
+        // //
+        // // for (key, value) in headers{
+        // //     headers_mut.append(key,value.parse()?);
+        // // }
+        //
+        // let mut h = HeaderMap::new();
+        // for (key, value) in headers{
+        //     h.insert(key,HeaderValue::from_str(value).expect("failed to parse header value"));
+        // }
+        //
+        // let mut headers_mut = req.headers_mut().expect("failed to get headers");
+        // headers_mut.drain();
+        // for v in h.iter(){
+        //     headers_mut.insert(v.0, v.1.to_owned());
+        // }
+        //
+        //
+        // let req = req.body(Body::from(""))?;
+        //
+        // let mut response = client.request(req).await?;
+        //
+        // let mut buffer = Vec::new();
+        //
+        // while let Some(next) = response.body_mut().data().await {
+        //     let chunk = next?;
+        //     buffer.extend_from_slice(chunk.as_ref());
+        // }
+        // let json = String::from_utf8(buffer)?;
+        // Ok(json)
     }
 
 

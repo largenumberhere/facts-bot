@@ -1,8 +1,8 @@
 use std::ptr::write;
 use std::str::FromStr;
 use futures::FutureExt;
-use hyper::http::uri::InvalidUri;
-use hyper::Uri;
+// use hyper::http::uri::InvalidUri;
+// use hyper::Uri;
 use itertools::Itertools;
 use serde_json::{json, Value};
 use serenity::builder::CreateApplicationCommandOption;
@@ -70,21 +70,21 @@ async fn handler (_command_interaction: &ApplicationCommandInteraction, _context
     };
 
     //validate the uri
-    let uri =  Uri::from_str(domain_string);
-    let uri = match uri {
-        Ok(v) => {
-            v
-        }
-        Err(e) => {
-            return Err(CommandError::InvalidUserInputError(format!("Not a domain: '{:?}'",e)))
-        }
-    };
+    // let uri =  reqwest::Url::from_str(domain_string);
+    // let uri = match uri {
+    //     Ok(v) => {
+    //         v
+    //     }
+    //     Err(e) => {
+    //         return Err(CommandError::InvalidUserInputError(format!("Not a domain: '{:?}'",e)))
+    //     }
+    // };
 
     let mut base_url = "https://api.api-ninjas.com/v1/whois?domain=".to_string();
     base_url.push_str(domain_string);
 
 
-    let uri: Uri = base_url.parse().to_command_result()?;
+    let uri: reqwest::Url = base_url.parse().to_command_result()?;
     let json = bot::HttpClient::https_get_json_with_headers(uri, vec![("X-Api-Key",ninja_facts_key.as_str())]).await.to_command_result()?;
 
     if json == "{}" {
