@@ -1,4 +1,5 @@
 use futures::future::BoxFuture;
+use serenity::builder::CreateApplicationCommandOption;
 use serenity::client::Context;
 use serenity::model::application::interaction::Interaction;
 use serenity::model::prelude::command::CommandOption;
@@ -10,7 +11,7 @@ pub struct GlobalSlashCommandDetails
 {
     pub name: String,
     pub description: String,
-    pub options: Vec<CommandOption>,
+    pub options: Vec<CreateApplicationCommandOption>,
     //pub handler: fn(&ApplicationCommandInteraction, &Context, &Interaction) -> Result<(),String>
     pub handler: for<'a> fn(&'a ApplicationCommandInteraction, &'a Context, &'a Interaction) -> BoxFuture<'a, Result<CommandSuccess,CommandError>>,
     pub force_command_update: Option<()>

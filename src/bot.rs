@@ -1,6 +1,6 @@
 use std::error::Error;
 use hyper::body::HttpBody;
-use hyper::{Body, Method, Request};
+use hyper::{Body, HeaderMap, Method, Request};
 use serenity::async_trait;
 use serenity::client::{Context, EventHandler};
 use serenity::http::{CacheHttp, Http};
@@ -12,8 +12,12 @@ use serenity::model::prelude::interaction::application_command::ApplicationComma
 use serenity::prelude::GatewayIntents;
 use crate::global_slash_command::GlobalSlashCommandDetails;
 use std::borrow::Borrow;
+use hyper::http::HeaderValue;
 use crate::command_result::{CommandError, CommandSuccess};
 use crate::context_menu_command::ContextMenuCommandDetails;
+
+use serde::Serialize;
+use serde::Deserialize;
 
 struct CommandsDetails {
     slash_commands: Vec<GlobalSlashCommandDetails>,
@@ -87,12 +91,14 @@ impl EventHandler for CommandsDetails {
                     .description(&new_command.description);
 
                 for option in new_command.options.iter(){
-                    command_builder.create_option(|option_builder|{
-                        option_builder.name(&option.name)
-                            .description(&option.description)
-                            .kind(option.kind)
-                            .required(option.required)
-                    });
+                    command_builder.add_option(option.clone());
+
+                    // command_builder.create_option(|option_builder|{
+                    //     option_builder.name(&option.name)
+                    //         .description(&option.description)
+                    //         .kind(option.kind)
+                    //         .required(option.required)
+                    // });
                 }
 
                 command_builder
@@ -366,11 +372,24 @@ impl HttpClient{
             .method(Method::GET)
             .uri(uri);
         // let mut headers_ =  req.headers_mut().unwrap();
-        let headers_mut: &mut hyper::HeaderMap = req.headers_mut().ok_or("failed to grab headers".to_string())?;
+        // let headers_mut: &mut hyper::HeaderMap = req.headers_mut().ok_or("failed to grab headers".to_string())?;
+        //
+        //
+        // for (key, value) in headers{
+        //     headers_mut.append(key,value.parse()?);
+        // }
 
+        let mut h = HeaderMap::new();
         for (key, value) in headers{
-            headers_mut.append(key,value.parse()?);
+            h.insert(key,HeaderValue::from_str(value).expect("failed to parse header value"));
         }
+
+        let mut headers_mut = req.headers_mut().expect("failed to get headers");
+        headers_mut.drain();
+        for v in h.iter(){
+            headers_mut.insert(v.0, v.1.to_owned());
+        }
+
 
         let req = req.body(Body::from(""))?;
 
