@@ -43,7 +43,6 @@ impl<T,E> ToCommandResultWith<T> for Result<T,E>
             Err(e) =>{
                 Err(CommandError::InternalError(format!("Error: {}. Details: {:#?}", message, e )))
             }
-
         }
     }
 }

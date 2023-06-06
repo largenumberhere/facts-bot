@@ -31,7 +31,12 @@ impl EventHandler for CommandsDetails {
     async fn ready(&self, context: Context, bot_data: Ready) {
 
         //startup message
+
+        let version = env!("CARGO_PKG_VERSION");
+        println!("Program version :{}", version);
         println!("Connected as '{}'",bot_data.user.name);
+
+
         let mut new_command_results = Vec::new();
         let mut failed_commands = 0;
 
@@ -393,7 +398,7 @@ impl HttpClient{
 
         let mut header_map = HeaderMap::new();
         for header in headers{
-            let header_value = header.1.parse().into_bot_error(format!("failed to parse header value '{:?}'", &header.1).as_str())?;//header.1.parse().to_bot_error("failed to insert headers")?;//.to_bot_error(format!("failed to insert ({}, {}) into headers", header.0, header.1).as_str())
+            let header_value = header.1.parse().into_bot_error("failed to parse https header")?;//header.1.parse().to_bot_error("failed to insert headers")?;//.to_bot_error(format!("failed to insert ({}, {}) into headers", header.0, header.1).as_str())
             let header_key = header.0;
             header_map.insert(header_key, header_value);
         }
@@ -403,8 +408,6 @@ impl HttpClient{
         let json = response.text() .await.into_bot_error("failed to get text from response")?;
         Ok(json)
     }
-
-
 
 }
 
