@@ -10,7 +10,7 @@ use serenity::model::prelude::interaction::application_command::ApplicationComma
 use serenity::prelude::GatewayIntents;
 use crate::global_slash_command::GlobalSlashCommandDetails;
 use std::borrow::Borrow;
-use std::fmt::{Debug, Display, Formatter, Write};
+use std::fmt::{Debug, Display, format, Formatter, Write};
 use std::ops::Deref;
 use reqwest::header::HeaderMap;
 use crate::command_result::{CommandError, CommandSuccess, ToCommandResultWith};
@@ -387,7 +387,7 @@ impl HttpClient{
 
         let mut header_map = HeaderMap::new();
         for header in headers{
-            let header_value = header.1.parse().unwrap();//header.1.parse().to_bot_error("failed to insert headers")?;//.to_bot_error(format!("failed to insert ({}, {}) into headers", header.0, header.1).as_str())
+            let header_value = header.1.parse().into_bot_error(format!("failed to parse header value '{:?}'", &header.1).as_str())?;//header.1.parse().to_bot_error("failed to insert headers")?;//.to_bot_error(format!("failed to insert ({}, {}) into headers", header.0, header.1).as_str())
             let header_key = header.0;
             header_map.insert(header_key, header_value);
         }
