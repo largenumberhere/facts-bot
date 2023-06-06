@@ -2,4 +2,4 @@ discord.file
 api-ninjas-com-key.file
 target/*
 docker-publish.yml
-docker/keys/*
+keys/*

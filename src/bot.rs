@@ -10,8 +10,10 @@ use serenity::model::prelude::interaction::application_command::ApplicationComma
 use serenity::prelude::GatewayIntents;
 use crate::global_slash_command::GlobalSlashCommandDetails;
 use std::borrow::Borrow;
+use std::fmt::{Debug, Display, Formatter, Write};
+use std::ops::Deref;
 use reqwest::header::HeaderMap;
-use crate::command_result::{CommandError, CommandSuccess};
+use crate::command_result::{CommandError, CommandSuccess, ToCommandResultWith};
 use crate::context_menu_command::ContextMenuCommandDetails;
 
 use serde::Serialize;
@@ -377,59 +379,95 @@ impl HttpClient{
         // Ok(String::from_utf8(buffer)?)
     }
 
+
+
     pub async fn https_get_json_with_headers(uri: reqwest::Url, headers: Vec<(&'static str, &str)>) -> Result<String, Box<dyn Error>>{
-        let client = reqwest::Client::builder().build()?;
+        let client = reqwest::Client::builder().build();
+        let client = client.into_bot_error("failed to build reqwest client")?;
 
         let mut header_map = HeaderMap::new();
         for header in headers{
-            header_map.insert(header.0, header.1.parse()?);
+            let header_value = header.1.parse().unwrap();//header.1.parse().to_bot_error("failed to insert headers")?;//.to_bot_error(format!("failed to insert ({}, {}) into headers", header.0, header.1).as_str())
+            let header_key = header.0;
+            header_map.insert(header_key, header_value);
         }
 
-        let response = client.get(uri).headers(header_map).send().await?;
-        let json = response.text().await?;
+        let response = client.get(uri.clone()).headers(header_map.clone()).send().await;
+        let response = response.into_bot_error(format!("failed to post with headers '{:#?}' to {:?}", header_map, uri).as_str())?;
+        let json = response.text() .await.into_bot_error("failed to get text from response")?;
         Ok(json)
-
-        // let https = hyper_tls::HttpsConnector::new();
-        // let client = hyper::client::Client::builder().build::<_, hyper::Body>(https);
-        //
-        // let mut req = Request::builder()
-        //     .method(Method::GET)
-        //     .uri(uri);
-        // // let mut headers_ =  req.headers_mut().unwrap();
-        // // let headers_mut: &mut hyper::HeaderMap = req.headers_mut().ok_or("failed to grab headers".to_string())?;
-        // //
-        // //
-        // // for (key, value) in headers{
-        // //     headers_mut.append(key,value.parse()?);
-        // // }
-        //
-        // let mut h = HeaderMap::new();
-        // for (key, value) in headers{
-        //     h.insert(key,HeaderValue::from_str(value).expect("failed to parse header value"));
-        // }
-        //
-        // let mut headers_mut = req.headers_mut().expect("failed to get headers");
-        // headers_mut.drain();
-        // for v in h.iter(){
-        //     headers_mut.insert(v.0, v.1.to_owned());
-        // }
-        //
-        //
-        // let req = req.body(Body::from(""))?;
-        //
-        // let mut response = client.request(req).await?;
-        //
-        // let mut buffer = Vec::new();
-        //
-        // while let Some(next) = response.body_mut().data().await {
-        //     let chunk = next?;
-        //     buffer.extend_from_slice(chunk.as_ref());
-        // }
-        // let json = String::from_utf8(buffer)?;
-        // Ok(json)
     }
 
 
 
 }
+
+#[derive(Debug)]
+struct BotError{
+    error_details: String,
+    base_error: String
+}
+
+impl BotError{
+    fn new(error_details: String, base_error: &dyn std::error::Error) -> BotError {
+        BotError{
+            base_error: format!("{:#?}", base_error),
+            error_details
+        }
+    }
+}
+
+
+pub trait IntoBotError<T>
+{
+    fn into_bot_error(self, message: &str) -> Result<T, BotError>;
+}
+
+impl<T,E>  IntoBotError<T> for Result<T,E>
+    where E: std::error::Error
+{
+    fn into_bot_error(self: Result<T, E>, message: &str) -> Result<T, BotError> {
+        match self {
+            Ok(v) => {
+                Ok(v)
+            },
+
+            Err(e) => {
+                Err(BotError::new(message.to_string(), &e))
+            }
+        }
+    }
+}
+
+pub trait AsBotError<T>{
+    fn as_bot_error(&self, message: &str) -> Result<&T, BotError>;
+}
+
+impl<T,E> AsBotError<T> for Result<T,E>
+    where E: std::error::Error
+{
+    fn as_bot_error(&self, message: &str) -> Result<&T, BotError> {
+        match &self {
+            Ok(v) => {
+                Ok(v)
+            }
+            Err(e) => {
+                Err(BotError::new(message.to_string(), e))
+            }
+        }
+    }
+}
+
+
+impl Display for BotError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Error :'{}'. Details: {:#?}",self.error_details , self.base_error)
+    }
+}
+
+impl std::error::Error for BotError{}
+
+
+
+
 

@@ -10,9 +10,12 @@ pub enum  CommandSuccess{
     SuccessWithReply(String)
 }
 
-pub trait ToCommandResult<T>{
+pub trait ToCommandResult<T>
+{
     fn to_command_result(self) -> Result<T,CommandError>;
 }
+
+
 
 impl<T,E> ToCommandResult<T> for Result<T,E>
     where E: Debug
@@ -22,6 +25,25 @@ impl<T,E> ToCommandResult<T> for Result<T,E>
         match self {
             Ok(v) => Ok(v),
             Err(e)=> Err(CommandError::InternalError(format!("{:#?}", e)))
+        }
+    }
+}
+
+pub trait ToCommandResultWith<T>
+{
+    fn to_command_result_with(self, message: &str) -> Result<T, CommandError>;
+}
+
+impl<T,E> ToCommandResultWith<T> for Result<T,E>
+    where E: Debug
+{
+    fn to_command_result_with(self, message: &str) -> Result<T, CommandError> {
+        match self {
+            Ok(v) => Ok(v),
+            Err(e) =>{
+                Err(CommandError::InternalError(format!("Error: {}. Details: {:#?}", message, e )))
+            }
+
         }
     }
 }

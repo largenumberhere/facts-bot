@@ -18,7 +18,7 @@ impl GetSlashCommandDetails for ApiNinjasTrivia{
             name:"trivia".to_string(),
             options: vec![],
             description: "Get a trivia question and answer from https://api.api-ninjas.com/v1/trivia".to_string(),
-            handler: |command_interaction, context, interaction| handler(command_interaction, context, interaction).boxed(),
+            handler: |command_interaction, context, interaction|    handler(command_interaction, context, interaction).boxed(),
             force_command_update: None,
         }
     }
