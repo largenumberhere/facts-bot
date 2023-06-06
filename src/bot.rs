@@ -12,6 +12,8 @@ use crate::global_slash_command::GlobalSlashCommandDetails;
 use std::borrow::Borrow;
 use std::fmt::{Debug, Display, format, Formatter, Write};
 use std::ops::Deref;
+use std::process::id;
+use futures::StreamExt;
 use reqwest::header::HeaderMap;
 use crate::command_result::{CommandError, CommandSuccess, ToCommandResultWith};
 use crate::context_menu_command::ContextMenuCommandDetails;
@@ -271,15 +273,19 @@ pub async fn start(bot_token: String, intents: GatewayIntents, slash_commands: V
 
 pub async fn get_token() -> Result<String, std::io::Error>{
     let file_contents = tokio::fs::read_to_string("./discord.file").await?;
+    let file_contents = file_contents.trim().to_string();
     Ok(file_contents)
 }
 
 pub async fn get_token_from(file_name: String) -> Result<String, std::io::Error> {
     //Is reading the file at runtime more secure? Idk?? I'll come back to this later
     let string = tokio::fs::read_to_string(&file_name).await?;
+    let string = string.trim().to_string();
+
     Ok(string)
     //std::fs::read_to_string(fileName.clone()).expect(&*format!("Could not find the file {}. An api key was expected to be in there", &fileName))
 }
+
 
 #[async_trait]
 pub trait QuickReplyEphemeral {
