@@ -10,9 +10,12 @@ use serenity::model::prelude::interaction::application_command::ApplicationComma
 use serenity::prelude::GatewayIntents;
 use crate::global_slash_command::GlobalSlashCommandDetails;
 use std::borrow::Borrow;
+use std::collections::HashMap;
 use std::fmt::{Debug, Display, format, Formatter, Write};
 use std::ops::Deref;
 use std::process::id;
+use std::sync::Mutex;
+use futures::future::lazy;
 use futures::StreamExt;
 use reqwest::header::HeaderMap;
 use crate::command_result::{CommandError, CommandSuccess, ToCommandResultWith};
@@ -276,18 +279,68 @@ pub async fn start(bot_token: String, intents: GatewayIntents, slash_commands: V
     Ok(())
 }
 
+static DISCORD_TOKEN: once_cell::sync::Lazy<String> = once_cell::sync::Lazy::new(||{
+    let file_contents = std::fs::read_to_string("./discord.file");
+    let file_contents = match file_contents{
+        Ok(v) => v.trim().to_string(),
+        Err(e) => {
+            panic!("./discord.file not found");
+        }
+    };
+
+    println!("Loaded discord token from ./discord.file!");
+    file_contents
+});
+
 pub async fn get_token() -> Result<String, std::io::Error>{
-    let file_contents = tokio::fs::read_to_string("./discord.file").await?;
-    let file_contents = file_contents.trim().to_string();
-    Ok(file_contents)
+    // let file_contents = tokio::fs::read_to_string("./discord.file").await?;
+    // let file_contents = file_contents.trim().to_string();
+    Ok(DISCORD_TOKEN.clone())
 }
 
-pub async fn get_token_from(file_name: String) -> Result<String, std::io::Error> {
-    //Is reading the file at runtime more secure? Idk?? I'll come back to this later
-    let string = tokio::fs::read_to_string(&file_name).await?;
-    let string = string.trim().to_string();
+static TOKENS_CACHE: once_cell::sync::Lazy<Mutex<HashMap<String,String>>> = once_cell::sync::Lazy::new(||{
+    let map: HashMap<String,String> = HashMap::new();
+    let map_mutex = Mutex::new(map);
 
-    Ok(string)
+    map_mutex
+});
+
+
+pub async fn get_token_from(file_name: String) -> Result<String, std::io::Error> {
+    {
+        let map = TOKENS_CACHE.lock().expect("mutex poisoned");
+        let possible_token = map.get(file_name.as_str());
+        if let Some(v) = possible_token {
+            println!("reusing token from file '{:?}'", &file_name);
+            return Ok(v.clone())
+        }
+    }
+
+    let file_contents = match std::fs::read_to_string(&file_name) {
+        Ok(v) => v,
+        Err(e) => {
+            panic!("required key file not found! {}", file_name);
+        }
+    };
+
+    let result = {
+        let mut map = TOKENS_CACHE.lock().expect("mutext poisoned");
+        map.insert(file_name.clone(), file_contents.clone())
+    };
+
+    if let Some(v) = result {
+        panic!("key '{}' had value '{}' and was unintentionally overwritten with '{}'", &file_name, v, &file_contents);
+    }
+
+
+    println!("Token successfully loaded from file '{}'", &file_name);
+    return Ok(file_contents);
+
+    //Is reading the file at runtime more secure? Idk?? I'll come back to this later
+    // let string = tokio::fs::read_to_string(&file_name).await?;
+    // let string = string.trim().to_string();
+    //
+    // Ok(string)
     //std::fs::read_to_string(fileName.clone()).expect(&*format!("Could not find the file {}. An api key was expected to be in there", &fileName))
 }
 
