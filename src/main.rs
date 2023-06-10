@@ -29,7 +29,8 @@ static SLASH_COMMANDS_LIST: once_cell::sync::Lazy<Vec<GlobalSlashCommandDetails>
         global_slash_commands::api_ninjas_trivia::ApiNinjasTrivia::get_slash_command_details(),
         global_slash_commands::api_ninja_whois_domain::WhoIsCommand::get_slash_command_details(),
         global_slash_commands::dad_jokes::DadJokesCommand::get_slash_command_details(),
-        global_slash_commands::dictionary::DictionarySlashCommand::get_slash_command_details()
+        global_slash_commands::dictionary::DictionarySlashCommand::get_slash_command_details(),
+        global_slash_commands::urban_dictionary::UrbanDictionaryCommand::get_slash_command_details()
     ];
 
     commands
