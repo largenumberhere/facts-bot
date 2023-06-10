@@ -7,3 +7,4 @@ pub mod api_ninjas_trivia;
 pub mod api_ninja_whois_domain;
 //pub mod city_statistics;
 pub mod dad_jokes;
+pub mod dictionary;

@@ -319,7 +319,8 @@ pub async fn get_token_from(file_name: String) -> Result<String, std::io::Error>
     let file_contents = match std::fs::read_to_string(&file_name) {
         Ok(v) => v,
         Err(e) => {
-            panic!("required key file not found! {}", file_name);
+            eprintln!("Required key file failed to open! file: '{}' error: {:#?}", file_name, e);
+            return  Err(e)
         }
     };
 

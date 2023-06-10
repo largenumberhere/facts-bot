@@ -159,7 +159,11 @@ enum Int64OrVecInt{
     Vec(Vec<i64>)
 }
 
-impl Int64OrVecInt {
+pub trait ToVec<T>{
+    fn to_vec(self) -> Vec<T>;
+}
+
+impl ToVec<i64> for Int64OrVecInt {
     fn to_vec(self) -> Vec<i64> {
         match self {
             Int64OrVecInt::Int(v) => vec![v],
@@ -176,7 +180,7 @@ enum StringOrVecString{
     Vec(Vec<String>)
 }
 
-impl StringOrVecString {
+impl ToVec<String> for StringOrVecString {
     fn to_vec(self) -> Vec<String>{
         match self {
             StringOrVecString::String(v) => vec![v],
@@ -184,6 +188,8 @@ impl StringOrVecString {
         }
     }
 }
+
+
 
 #[derive(Serialize, Deserialize)]
 struct DomainDetailsResponse {
