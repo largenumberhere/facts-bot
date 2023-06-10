@@ -109,14 +109,23 @@ async fn handler (_command_interaction: &ApplicationCommandInteraction, _context
         writeln!(&mut reply_string, "Whois server: {}", response.whois_server).to_command_result()?;
 
         write!(&mut reply_string, "Creation date(s): ").to_command_result()?;
-        for date in response.creation_date.into_iter() {
-            write!(&mut reply_string, "<t:{}:d>, ", date).to_command_result()?;
+        if response.creation_date.len() == 0{
+            write!(&mut reply_string, "{}" , NONE_LISTED).to_command_result()?;
+        } else {
+            for date in response.creation_date.into_iter() {
+                write!(&mut reply_string, "<t:{}:d>, ", date).to_command_result()?;
+            }
         }
         write!(&mut reply_string, "\n").to_command_result()?;
 
         write!(&mut reply_string, "Expiration date(s): ").to_command_result()?;
-        for date in response.expiration_date.into_iter() {
-            write!(&mut reply_string, "<t:{}:d>, ", date).to_command_result()?;
+        if response.expiration_date.len() == 0 {
+            write!(&mut reply_string, "{}", NONE_LISTED).to_command_result()?;
+        }
+        else {
+            for date in response.expiration_date.into_iter() {
+                write!(&mut reply_string, "<t:{}:d>, ", date).to_command_result()?;
+            }
         }
         write!(&mut reply_string, "\n").to_command_result()?;
 
@@ -150,6 +159,16 @@ enum Int64OrVecInt{
     Vec(Vec<i64>)
 }
 
+impl Int64OrVecInt {
+    fn to_vec(self) -> Vec<i64> {
+        match self {
+            Int64OrVecInt::Int(v) => vec![v],
+            Int64OrVecInt::Vec(v) => v
+        }
+    }
+}
+
+
 #[derive(Serialize, Deserialize)]
 #[serde(untagged)]
 enum StringOrVecString{
@@ -157,20 +176,29 @@ enum StringOrVecString{
     Vec(Vec<String>)
 }
 
+impl StringOrVecString {
+    fn to_vec(self) -> Vec<String>{
+        match self {
+            StringOrVecString::String(v) => vec![v],
+            StringOrVecString::Vec(v) => v
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize)]
 struct DomainDetailsResponse {
-    pub domain_name: StringOrVecString,
-    pub registrar: String,
-    pub whois_server: String,
-    pub updated_date: Int64OrVecInt,
-    pub creation_date: Int64OrVecInt,
-    pub expiration_date: Int64OrVecInt,
-    pub name_servers: StringOrVecString,
-    pub emails: StringOrVecString,
-    pub dnssec: String,
-    pub org: String,
-    pub state: String,
-    pub country: String,
+    pub domain_name: Option<StringOrVecString>,
+    pub registrar: Option<String>,
+    pub whois_server:  Option<String>,
+    pub updated_date: Option<Int64OrVecInt>,
+    pub creation_date: Option<Int64OrVecInt>,
+    pub expiration_date: Option<Int64OrVecInt>,
+    pub name_servers: Option<StringOrVecString>,
+    pub emails: Option<StringOrVecString>,
+    pub dnssec: Option<String>,
+    pub org: Option<String>,
+    pub state: Option<String>,
+    pub country: Option<String>,
 }
 
 struct DomainDetails{
@@ -188,45 +216,47 @@ struct DomainDetails{
     pub country: String,
 }
 
+static NONE_LISTED:&str = "none listed";
+
 impl From<DomainDetailsResponse> for DomainDetails {
     fn from(value: DomainDetailsResponse) -> DomainDetails {
         DomainDetails{
             domain_name: match value.domain_name {
-                StringOrVecString::String(v) => {vec![v]}
-                StringOrVecString::Vec(v) => {v}
+                Some(v) => v.to_vec(),
+                None => vec![]
             },
-            registrar: value.registrar,
-            whois_server: value.whois_server,
+            registrar: value.registrar.unwrap_or_else(|| NONE_LISTED.to_string()),
+            whois_server: value.whois_server.unwrap_or_else(|| NONE_LISTED.to_string()),
             updated_date: {
                 match value.updated_date {
-                    Int64OrVecInt::Int(v) => {vec![v]}
-                    Int64OrVecInt::Vec(v) => {v}
+                    Some(v) => v.to_vec(),
+                    None => vec![]
                 }
             },
             creation_date: {
                 match value.creation_date {
-                    Int64OrVecInt::Int(v) => {vec![v]}
-                    Int64OrVecInt::Vec(v) => {v}
+                    Some(v) => v.to_vec(),
+                    None => vec![]
                 }
             },
             expiration_date: {
                 match value.expiration_date {
-                    Int64OrVecInt::Int(v) => {vec![v]}
-                    Int64OrVecInt::Vec(v) => {v}
+                    Some(v) => v.to_vec(),
+                    None=> vec![]
                 }
             },
             name_servers: match value.name_servers{
-                StringOrVecString::String(v) => {vec![v]}
-                StringOrVecString::Vec(v) => { v}
+                Some(v) => v.to_vec(),
+                None => vec![]
             },
             emails: match value.emails {
-                StringOrVecString::String(v) => {vec![v]}
-                StringOrVecString::Vec(v) => {v}
+                Some(v) => v.to_vec(),
+                None=> vec![NONE_LISTED.to_string()]
             },
-            dnssec: value.dnssec,
-            org: value.org,
-            state: value.state,
-            country: value.country
+            dnssec: value.dnssec.unwrap_or_else(|| NONE_LISTED.to_string()),
+            org: value.org.unwrap_or_else(|| NONE_LISTED.to_string()),
+            state: value.state.unwrap_or_else(|| NONE_LISTED.to_string()),
+            country: value.country.unwrap_or_else(||NONE_LISTED.to_string())
         }
     }
 }
