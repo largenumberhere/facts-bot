@@ -11,3 +11,4 @@ pub mod dictionary;
 pub mod urban_dictionary;
 pub mod hobby;
 pub mod text_language;
+pub mod random_word;
