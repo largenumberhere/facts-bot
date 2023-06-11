@@ -9,3 +9,4 @@ pub mod api_ninja_whois_domain;
 pub mod dad_jokes;
 pub mod dictionary;
 pub mod urban_dictionary;
+pub mod hobby;
