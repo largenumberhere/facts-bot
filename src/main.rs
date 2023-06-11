@@ -34,7 +34,7 @@ static SLASH_COMMANDS_LIST: once_cell::sync::Lazy<Vec<GlobalSlashCommandDetails>
         global_slash_commands::hobby::HobbySlashCommand::get_slash_command_details(),
         global_slash_commands::text_language::TextLanguageSlashCommand::get_slash_command_details(),
         global_slash_commands::random_word::RandomWordSlashCommand::get_slash_command_details(),
-
+        global_slash_commands::thesaurus::ThesaurusSlashCommand::get_slash_command_details(),
 
     ];
 
