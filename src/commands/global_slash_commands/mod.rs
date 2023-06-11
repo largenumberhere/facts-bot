@@ -13,3 +13,4 @@ pub mod hobby;
 pub mod text_language;
 pub mod random_word;
 pub mod thesaurus;
+pub mod riddle;
