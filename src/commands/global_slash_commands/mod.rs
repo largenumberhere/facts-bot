@@ -10,3 +10,4 @@ pub mod dad_jokes;
 pub mod dictionary;
 pub mod urban_dictionary;
 pub mod hobby;
+pub mod text_language;

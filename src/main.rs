@@ -32,6 +32,7 @@ static SLASH_COMMANDS_LIST: once_cell::sync::Lazy<Vec<GlobalSlashCommandDetails>
         global_slash_commands::dictionary::DictionarySlashCommand::get_slash_command_details(),
         global_slash_commands::urban_dictionary::UrbanDictionaryCommand::get_slash_command_details(),
         global_slash_commands::hobby::HobbySlashCommand::get_slash_command_details(),
+        global_slash_commands::text_language::TextLanguageSlashCommand::get_slash_command_details(),
     ];
 
     commands
