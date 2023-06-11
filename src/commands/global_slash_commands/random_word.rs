@@ -24,7 +24,7 @@ impl GetSlashCommandDetails for RandomWordSlashCommand{
     }
 }
 
-async fn handler (command_interaction: &ApplicationCommandInteraction, context: &Context, interaction: &Interaction) -> Result<CommandSuccess, CommandError> {
+async fn handler (_command_interaction: &ApplicationCommandInteraction, _context: &Context, _interaction: &Interaction) -> Result<CommandSuccess, CommandError> {
     let ninja_facts_key = bot::get_token_from("api-ninjas-com-key.file".to_string()).await.to_command_result()?;
 
     let word =  {
@@ -42,7 +42,7 @@ async fn handler (command_interaction: &ApplicationCommandInteraction, context: 
         let url: Result<Url,_> =  dictionary_url.parse();
         let url = match url {
             Ok(v) => Some(v),
-            Err(e) =>{
+            Err(_) =>{
                 None
             }
         };

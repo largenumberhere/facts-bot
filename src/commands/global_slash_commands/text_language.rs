@@ -7,7 +7,7 @@ use serenity::model::application::command::CommandOptionType;
 use serenity::model::application::interaction::application_command::ApplicationCommandInteraction;
 use serenity::model::application::interaction::Interaction;
 use crate::bot;
-use crate::command_result::{CommandError, CommandSuccess, ToCommandResult, ToCommandResultWith};
+use crate::command_result::{CommandError, CommandSuccess, ToCommandResult};
 use crate::global_slash_command::{get_string_option, GetSlashCommandDetails, GlobalSlashCommandDetails};
 
 pub struct TextLanguageSlashCommand;
@@ -33,9 +33,9 @@ impl GetSlashCommandDetails for TextLanguageSlashCommand{
     }
 }
 
-async fn handler (command_interaction: &ApplicationCommandInteraction, context: &Context, interaction: &Interaction) -> Result<CommandSuccess, CommandError> {
+async fn handler (command_interaction: &ApplicationCommandInteraction, _context: &Context, _interaction: &Interaction) -> Result<CommandSuccess, CommandError> {
     let option0 = get_string_option(command_interaction)?;
-    let option_trimmed = option0.trim();
+    // let option_trimmed = option0.trim();
 
     if option0.len()> 1000 {
         return Err(CommandError::InvalidUserInputError("Sampple is too long. Max 2000 characters allowed".to_string()));

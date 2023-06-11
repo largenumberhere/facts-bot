@@ -35,7 +35,7 @@ impl GetSlashCommandDetails for ThesaurusSlashCommand{
     }
 }
 
-async fn handler (command_interaction: &ApplicationCommandInteraction, context: &Context, interaction: &Interaction) -> Result<CommandSuccess, CommandError>{
+async fn handler (command_interaction: &ApplicationCommandInteraction, _context: &Context, _interaction: &Interaction) -> Result<CommandSuccess, CommandError>{
     let option0 = get_string_option(command_interaction)?;
 
     let mut thesaurus_url = "https://api.api-ninjas.com/v1/thesaurus?word=".to_string();

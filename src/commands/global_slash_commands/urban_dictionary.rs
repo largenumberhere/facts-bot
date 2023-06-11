@@ -1,5 +1,5 @@
 use futures::FutureExt;
-use lngh_strings::{WriteDebugStringExt, WriteLnDebugStringExt, WriteLnStringExt, WriteStringExt};
+use lngh_strings::{WriteLnStringExt, WriteStringExt};
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use serenity::builder::CreateApplicationCommandOption;
@@ -32,7 +32,7 @@ impl GetSlashCommandDetails for UrbanDictionaryCommand {
     }
 }
 
-async fn handler(command_interaction: &ApplicationCommandInteraction, context: &Context, interaction: &Interaction) -> Result<CommandSuccess,CommandError> {
+async fn handler(command_interaction: &ApplicationCommandInteraction, _context: &Context, _interaction: &Interaction) -> Result<CommandSuccess,CommandError> {
     let option = get_string_option(command_interaction)?;
     let url: Url = format!("https://api.urbandictionary.com/v0/define?term={}", option).parse().to_command_result()?;
     let json = bot::HttpClient::https_get_json(url).await.to_command_result()?;

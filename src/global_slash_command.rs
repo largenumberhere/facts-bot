@@ -3,7 +3,7 @@ use serenity::builder::CreateApplicationCommandOption;
 use serenity::client::Context;
 use serenity::json::Value;
 use serenity::model::application::interaction::Interaction;
-use serenity::model::prelude::command::CommandOption;
+
 use serenity::model::prelude::interaction::application_command::ApplicationCommandInteraction;
 use crate::command_result::{CommandError, CommandSuccess};
 

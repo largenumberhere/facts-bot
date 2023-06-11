@@ -23,7 +23,7 @@ impl GetSlashCommandDetails for RiddleSlashCommand{
     }
 }
 
-async fn handler (command_interaction: &ApplicationCommandInteraction, context: &Context, interaction: &Interaction) -> Result<CommandSuccess, CommandError> {
+async fn handler (_command_interaction: &ApplicationCommandInteraction, _context: &Context, _interaction: &Interaction) -> Result<CommandSuccess, CommandError> {
     let ninja_facts_key = bot::get_token_from("api-ninjas-com-key.file".to_string()).await.to_command_result()?;
     let url:Url = "https://api.api-ninjas.com/v1/riddles".parse().to_command_result()?;
 

@@ -1,4 +1,4 @@
-use serde_json::{to_string, Value};
+
 use serenity::client::Context;
 use serenity::model::application::interaction::application_command::ApplicationCommandInteraction;
 use serenity::model::application::interaction::Interaction;

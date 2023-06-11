@@ -1,14 +1,14 @@
-use std::f32::consts::E;
-use std::fmt::format;
+
+
 use futures::FutureExt;
 use lngh_strings::{WriteLnStringExt, WriteStringExt};
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use serenity::builder::CreateApplicationCommandOption;
 use serenity::client::Context;
-use serenity::json::Value;
+
 use serenity::model::application::command::CommandOptionType;
-use serenity::model::application::interaction::application_command::{ApplicationCommandInteraction, CommandDataOptionValue};
+use serenity::model::application::interaction::application_command::{ApplicationCommandInteraction};
 use serenity::model::prelude::interaction::Interaction;
 use crate::bot;
 use crate::command_result::{CommandError, CommandSuccess, ToCommandResult};
@@ -38,7 +38,7 @@ impl GetSlashCommandDetails for DictionarySlashCommand {
 }
 
 
-async fn handle(command_interaction: &ApplicationCommandInteraction, context: &Context, interaction: &Interaction) -> Result<CommandSuccess,CommandError>{
+async fn handle(command_interaction: &ApplicationCommandInteraction, _context: &Context, _interaction: &Interaction) -> Result<CommandSuccess,CommandError>{
     let option = get_string_option(command_interaction)?;
     let string = option.trim();
     let address = "https://api.api-ninjas.com/v1/dictionary?word=";

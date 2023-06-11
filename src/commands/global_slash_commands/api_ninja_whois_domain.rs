@@ -1,24 +1,24 @@
-use std::ptr::write;
-use std::str::FromStr;
+
+
 use futures::FutureExt;
 // use hyper::http::uri::InvalidUri;
 // use hyper::Uri;
-use itertools::Itertools;
-use serde_json::{json, Value};
+
+
 use serenity::builder::CreateApplicationCommandOption;
 use serenity::client::Context;
 use serenity::model::application::command::CommandOptionType;
 use serenity::model::application::interaction::application_command::{ApplicationCommandInteraction, CommandDataOptionValue};
 use serenity::model::application::interaction::Interaction;
-use serenity::model::prelude::command::CommandOption;
+
 use crate::bot;
 use crate::command_result::{CommandError, CommandSuccess, ToCommandResult};
-use crate::command_result::CommandError::InternalError;
+
 use crate::global_slash_command::{GetSlashCommandDetails, GlobalSlashCommandDetails};
-use serde::{Serialize, Deserialize, Deserializer, de};
-use std::fmt::{Formatter, Write};
-use std::marker::PhantomData;
-use serde::de::Error;
+use serde::{Serialize, Deserialize};
+use std::fmt::{ Write};
+
+
 
 pub struct WhoIsCommand{}
 
@@ -128,6 +128,17 @@ async fn handler (_command_interaction: &ApplicationCommandInteraction, _context
             }
         }
         write!(&mut reply_string, "\n").to_command_result()?;
+
+        writeln!(&mut reply_string, "Update date(s): ").to_command_result()?;
+        if response.updated_date.len() == 0 {
+            write!(&mut reply_string, "{}", NONE_LISTED).to_command_result()?
+        }else {
+            for date in response.updated_date.into_iter(){
+                write!(&mut reply_string, "<t:{}:d>", date).to_command_result()?;
+            }
+        }
+
+
 
         write!(&mut reply_string, "Name servers: ").to_command_result()?;
         for server in response.name_servers.into_iter() {

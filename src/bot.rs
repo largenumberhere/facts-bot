@@ -11,18 +11,18 @@ use serenity::prelude::GatewayIntents;
 use crate::global_slash_command::GlobalSlashCommandDetails;
 use std::borrow::Borrow;
 use std::collections::HashMap;
-use std::fmt::{Debug, Display, format, Formatter, Write};
-use std::ops::Deref;
-use std::process::id;
+use std::fmt::{Debug, Display, Formatter};
+
+
 use std::sync::Mutex;
-use futures::future::lazy;
-use futures::StreamExt;
+
+
 use reqwest::header::HeaderMap;
-use crate::command_result::{CommandError, CommandSuccess, ToCommandResultWith};
+use crate::command_result::{CommandError, CommandSuccess};
 use crate::context_menu_command::ContextMenuCommandDetails;
 
-use serde::Serialize;
-use serde::Deserialize;
+
+
 
 struct CommandsDetails {
     slash_commands: Vec<GlobalSlashCommandDetails>,
@@ -284,7 +284,7 @@ static DISCORD_TOKEN: once_cell::sync::Lazy<String> = once_cell::sync::Lazy::new
     let file_contents = match file_contents{
         Ok(v) => v.trim().to_string(),
         Err(e) => {
-            panic!("./discord.file not found");
+            panic!("./discord.file not found because {:#?}", e);
         }
     };
 
@@ -466,7 +466,7 @@ impl HttpClient{
 }
 
 #[derive(Debug)]
-struct BotError{
+pub struct BotError{
     error_details: String,
     base_error: String
 }
