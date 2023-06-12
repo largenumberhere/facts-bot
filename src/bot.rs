@@ -326,7 +326,7 @@ pub async fn get_token_from(file_name: String) -> Result<String, std::io::Error>
 
     let result = {
         let mut map = TOKENS_CACHE.lock().expect("mutext poisoned");
-        map.insert(file_name.clone(), file_contents.clone())
+        map.insert(file_name.clone(), file_contents.trim().to_string())
     };
 
     if let Some(v) = result {
