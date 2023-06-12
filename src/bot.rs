@@ -279,23 +279,26 @@ pub async fn start(bot_token: String, intents: GatewayIntents, slash_commands: V
     Ok(())
 }
 
-static DISCORD_TOKEN: once_cell::sync::Lazy<String> = once_cell::sync::Lazy::new(||{
-    let file_contents = std::fs::read_to_string("./discord.file");
-    let file_contents = match file_contents{
-        Ok(v) => v.trim().to_string(),
-        Err(e) => {
-            panic!("./discord.file not found because {:#?}", e);
-        }
-    };
+// static DISCORD_TOKEN: once_cell::sync::Lazy<String> = once_cell::sync::Lazy::new(||{
+//     let file_contents = std::fs::read_to_string("./discord.file");
+//     let file_contents = match file_contents{
+//         Ok(v) => v.trim().to_string(),
+//         Err(e) => {
+//             panic!("./discord.file not found because {:#?}", e);
+//         }
+//     };
 
-    println!("Loaded discord token from ./discord.file!");
-    file_contents
-});
+//     println!("Loaded discord token from ./discord.file!");
+//     file_contents
+// });
 
 pub async fn get_token() -> Result<String, std::io::Error>{
     // let file_contents = tokio::fs::read_to_string("./discord.file").await?;
     // let file_contents = file_contents.trim().to_string();
-    Ok(DISCORD_TOKEN.clone())
+    // Ok(DISCORD_TOKEN.clone())
+
+    let token = get_token_from("./discord.file".to_string()).await?;
+    return Ok(token);
 }
 
 static TOKENS_CACHE: once_cell::sync::Lazy<Mutex<HashMap<String,String>>> = once_cell::sync::Lazy::new(||{
@@ -317,25 +320,31 @@ pub async fn get_token_from(file_name: String) -> Result<String, std::io::Error>
     }
 
     let file_contents = match std::fs::read_to_string(&file_name) {
-        Ok(v) => v,
+        Ok(v) => v.trim().to_owned(),
         Err(e) => {
             eprintln!("Required key file failed to open! file: '{}' error: {:#?}", file_name, e);
             return  Err(e)
         }
     };
-
-    let result = {
-        let mut map = TOKENS_CACHE.lock().expect("mutext poisoned");
-        map.insert(file_name.clone(), file_contents.trim().to_string())
-    };
-
-    if let Some(v) = result {
-        panic!("key '{}' had value '{}' and was unintentionally overwritten with '{}'", &file_name, v, &file_contents);
+    
+    if file_contents.chars().any(|c| c.is_whitespace()){
+        return Err(std::io::Error::new(std::io::ErrorKind::Other, format!("Illegal whitespace found in key!")));
     }
 
+    {
+        let result = {
+            let mut map = TOKENS_CACHE.lock().expect("mutext poisoned");
+            map.insert(file_name.clone(), file_contents.clone())
+        };
+
+        if let Some(v) = result {
+            panic!("key '{}' had value '{}' and was unintentionally overwritten with '{}'", &file_name, v, &file_contents);
+        }
+    }
 
     println!("Token successfully loaded from file '{}'", &file_name);
     return Ok(file_contents);
+    
 
     //Is reading the file at runtime more secure? Idk?? I'll come back to this later
     // let string = tokio::fs::read_to_string(&file_name).await?;
