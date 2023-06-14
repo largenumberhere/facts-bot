@@ -1,38 +1,48 @@
-use futures::FutureExt;
+use crate::bot;
+use crate::command_result::{CommandError, CommandSuccess, ToCommandResult};
 use crate::global_slash_command::{GetSlashCommandDetails, GlobalSlashCommandDetails};
+use futures::FutureExt;
+use serde::{Deserialize, Serialize};
 use serenity::client::Context;
 use serenity::model::application::interaction::application_command::ApplicationCommandInteraction;
 use serenity::model::application::interaction::Interaction;
-use serde::{Deserialize, Serialize};
-use crate::bot;
-use crate::command_result::{CommandError, CommandSuccess, ToCommandResult};
 
+pub struct NumberOfTheDay {}
 
-pub struct NumberOfTheDay{}
-
-impl GetSlashCommandDetails for NumberOfTheDay{
+impl GetSlashCommandDetails for NumberOfTheDay {
     fn get_slash_command_details() -> GlobalSlashCommandDetails {
-        GlobalSlashCommandDetails{
+        GlobalSlashCommandDetails {
             name: "number_of_the_day".to_string(),
             options: vec![],
-            description: "get information about the number of the day according to https://api.math.tools/".to_string(),
-            handler: |command_interaction, context, interaction| handler(command_interaction, context, interaction).boxed(),
+            description:
+                "get information about the number of the day according to https://api.math.tools/"
+                    .to_string(),
+            handler: |command_interaction, context, interaction| {
+                handler(command_interaction, context, interaction).boxed()
+            },
             force_command_update: None,
         }
     }
 }
 
-async fn handler(_command_interaction: &ApplicationCommandInteraction, _context: &Context, _interaction: &Interaction) -> Result<CommandSuccess, CommandError> {
-    let uri = "https://api.math.tools/numbers/nod".parse().to_command_result()?;
-    let json = bot::HttpClient::https_get_json(uri).await.to_command_result()?;
-    let number_of_the_day_response: Root =  serde_json::from_str(json.as_str()).to_command_result()?;
+async fn handler(
+    _command_interaction: &ApplicationCommandInteraction,
+    _context: &Context,
+    _interaction: &Interaction,
+) -> Result<CommandSuccess, CommandError> {
+    let uri = "https://api.math.tools/numbers/nod"
+        .parse()
+        .to_command_result()?;
+    let json = bot::HttpClient::https_get_json(uri)
+        .await
+        .to_command_result()?;
+    let number_of_the_day_response: Root =
+        serde_json::from_str(json.as_str()).to_command_result()?;
     let number_of_the_day = number_of_the_day_response.contents.nod.numbers.number;
 
-    let reply = format!("The number of the day is: {}",number_of_the_day);
+    let reply = format!("The number of the day is: {}", number_of_the_day);
 
     Ok(CommandSuccess::SuccessWithReply(reply))
-
-
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
